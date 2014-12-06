@@ -30,3 +30,9 @@ add_library(SDL2_MAIN STATIC IMPORTED)
 set_target_properties(SDL2_MAIN PROPERTIES IMPORTED_LOCATION ${SDL2_MAIN_LIB})
 
 target_link_libraries(${PROJECT_NAME} SDL2 SDL2_MAIN)
+
+# OpenGL
+
+find_package(OpenGL REQUIRED)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${OPENGL_INCLUDE_DIR})
