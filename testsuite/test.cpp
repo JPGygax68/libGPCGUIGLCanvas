@@ -3,6 +3,8 @@
 #include <boost/test/output_test_stream.hpp>
 #include <iostream>
 
+#include <SDL2/SDL.h>
+
 /* Thanks to Björn Pollex on StackOverflow for the following code:
  */
 struct cout_redirect {

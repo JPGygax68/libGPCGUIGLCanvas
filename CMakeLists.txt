@@ -24,6 +24,19 @@ set(HEADER_FILES painter.hpp)
 # Testsuite
 #set(TESTSUITE_FILES part1.cpp part2.cpp)
 
+# We need SDL2 for the test suite
+find_library(SDL2_LIB SDL2)
+if (NOT SDL2_LIB) 
+    message(ERROR "Couldn't find SDL2 library")
+endif()
+add_library(SDL2 STATIC IMPORTED)
+set_target_properties(SDL2 PROPERTIES IMPORTED_LOCATION ${SDL2_LIB})
+find_path(SDL2_INCLUDE_DIR SDL2/SDL.h)
+if (NOT SDL2_INCLUDE_DIR) 
+    message(ERROR "Couldn't find SDL2 include directory")
+endif()
+set_target_properties(SDL2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIR})
+
 
 
 #----------------------------------------------------------------------
@@ -187,6 +200,7 @@ target_include_directories(testsuite PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(testsuite ${Boost_LIBRARIES})
 
 add_test(NAME testsuite COMMAND testsuite CONFIGURATIONS Debug)
+target_link_libraries(testsuite SDL2)
 
 #------------------------------------------------
 # Installation - specify files to package
