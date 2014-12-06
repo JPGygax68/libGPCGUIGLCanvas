@@ -21,21 +21,9 @@ set(HEADER_FILES painter.hpp)
 # Subdirectory (below "include") for header files (will be derived from namespace if not specified)
 #set(HEADERS_SUBDIRECTORY "nslevel1/nslevel2")
 
-# Testsuite
-#set(TESTSUITE_FILES part1.cpp part2.cpp)
+# Test application
+add_subdirectory(Testapp)
 
-# We need SDL2 for the test suite
-find_library(SDL2_LIB SDL2)
-if (NOT SDL2_LIB) 
-    message(ERROR "Couldn't find SDL2 library")
-endif()
-add_library(SDL2 STATIC IMPORTED)
-set_target_properties(SDL2 PROPERTIES IMPORTED_LOCATION ${SDL2_LIB})
-find_path(SDL2_INCLUDE_DIR SDL2/SDL.h)
-if (NOT SDL2_INCLUDE_DIR) 
-    message(ERROR "Couldn't find SDL2 include directory")
-endif()
-set_target_properties(SDL2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIR})
 
 
 
@@ -174,33 +162,6 @@ else()
   set_property(TARGET ${TARGET_NAME} PROPERTY SOVERSION ${VERSION_MAJOR})
   set_property(TARGET ${TARGET_NAME} PROPERTY DEBUG_POSTFIX d)
 endif()
-
-#------------------------------------------------
-# Test suite 
-
-# Prerequisites
-
-include(CTest)
-#enable_testing()
-
-if (NOT TESTSUITE_FILES)
-    set(TESTSUITE_FILES "test.cpp")
-endif()
-
-set(testsuite_filenames "testsuite/test.cpp")
-foreach(file ${TESTSUITE_FILES})
-    list(APPEND testsuite_filenames "testsuite/${file}")
-endforeach()
-
-add_executable(testsuite ${testsuite_filenames})
-target_link_libraries(testsuite ${TARGET_NAME})
-
-find_package(Boost) # for some reason, specifying the component (unit_test_framework) won't work
-target_include_directories(testsuite PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(testsuite ${Boost_LIBRARIES})
-
-add_test(NAME testsuite COMMAND testsuite CONFIGURATIONS Debug)
-target_link_libraries(testsuite SDL2)
 
 #------------------------------------------------
 # Installation - specify files to package
