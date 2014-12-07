@@ -22,7 +22,7 @@ set(HEADER_FILES painter.hpp)
 set(EMBEDDABLE_FILES vertex.glsl fragment.glsl)
 
 # Required packages
-set(REQUIRED_PACKAGES "GLEW")
+set(REQUIRED_PACKAGES GLEW libGPCGLWrappers)
 
 # Subdirectory (below "include") for header files (will be derived from namespace if not specified)
 #set(HEADERS_SUBDIRECTORY "nslevel1/nslevel2")
@@ -130,7 +130,7 @@ endforeach()
 set(HEADER_FILES) # do not pass to subdirs
 
 # Compute the name of the (main) target
-set(TARGET_NAME "${NAKED_PROJECT_NAME}")
+set(TARGET_NAME "${PROJECT_NAME}")
 
 # Create the (main) target
 if (LIBRARY_TYPE STREQUAL "shared")
@@ -159,11 +159,23 @@ endif()
 
 # Dependencies on external packages
 foreach(pkg ${REQUIRED_PACKAGES})
-  find_package(${pkg} REQUIRED)
-  string(TOUPPER ${pkg} dep_uc)
-  # TODO: handling for PRIVATE, PUBLIC, and INTERFACE linking)
-  target_link_libraries(${TARGET_NAME} PUBLIC ${${dep_uc}_LIBRARIES})
-  target_include_directories(${TARGET_NAME} PUBLIC ${${dep_uc}_INCLUDE_DIRS})
+  find_package(${pkg} NO_MODULE QUIET)
+  if (${pkg}_FOUND)
+    message(STATUS "Adding package \"${pkg}\" as an imported target")
+    #add_dependencies(${TARGET_NAME} ${pkg})
+    target_link_libraries(${TARGET_NAME} PRIVATE ${pkg})
+    target_include_directories(${TARGET_NAME} PRIVATE $<TARGET_PROPERTY:${pkg},INTERFACE_INCLUDE_DIRECTORIES>)
+  else()
+    find_package(${pkg} REQUIRED)
+    string(TOUPPER ${pkg} pkg_uc)
+    if (NOT ${${pkg_uc}_FOUND})
+      message(FATAL_ERROR "Required package not found: ${pkg}") # ${${pkg_uc}_FOUND} ${${pkg_uc}_LIBRARIES} ${${pkg_uc}_INCLUDE_DIRS}")
+    endif()
+    # TODO: handling for PRIVATE, PUBLIC, and INTERFACE linking)
+    message(STATUS "Adding package \"${pkg}\" as a module") # ${${pkg}_FOUND} ${${pkg}_LIBRARIES} ${${pkg}_INCLUDE_DIRS}")
+    target_link_libraries(${TARGET_NAME} PRIVATE ${${pkg}_LIBRARIES})
+    target_include_directories(${TARGET_NAME} PRIVATE ${${pkg}_INCLUDE_DIRS})
+  endif()
 endforeach()
 
 if (EXAMPLE_EXTERNAL_DEPENDENCY)

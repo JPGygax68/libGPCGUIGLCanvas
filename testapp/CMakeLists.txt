@@ -4,7 +4,7 @@ project(TestApp)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-target_link_libraries(${PROJECT_NAME} GPC_GUIGLPainter)
+target_link_libraries(${PROJECT_NAME} libGPC_GUIGLPainter)
 
 # We need SDL2
 
