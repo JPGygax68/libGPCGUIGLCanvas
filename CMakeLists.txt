@@ -12,11 +12,17 @@ set(VERSION_PATCH 1)
 set(NAMESPACE gpc::gui::gl)
 
 # Library type: options are "shared", "static" and "header-only"
-#set(LIBRARY_TYPE "header-only")
+set(LIBRARY_TYPE "static")
 
 # Source & header files
 set(SOURCE_FILES painter.cpp)
 set(HEADER_FILES painter.hpp)
+
+# Special: embeddable files
+set(EMBEDDABLE_FILES vertex.glsl fragment.glsl)
+
+# Required packages
+set(REQUIRED_PACKAGES "GLEW")
 
 # Subdirectory (below "include") for header files (will be derived from namespace if not specified)
 #set(HEADERS_SUBDIRECTORY "nslevel1/nslevel2")
@@ -25,11 +31,42 @@ set(HEADER_FILES painter.hpp)
 add_subdirectory(Testapp)
 
 
-
-
 #----------------------------------------------------------------------
 # ONLY EDIT PAST THIS POINT IF CUSTOM CONFIGURATION IS NEEDED
 #----------------------------------------------------------------------
+
+# Special: embeddable files
+
+if (EMBEDDABLE_FILES)
+
+  set(GENERATED ${CMAKE_CURRENT_BINARY_DIR}/generated)
+  include_directories(${GENERATED})
+
+  # Find the GPC Bin2C utility
+  find_package(GPCBin2C REQUIRED)
+
+  # Generate header files from the embeddables
+  # (also create a list of the embeddables as source files for the target)
+  # (also create a list of embeddable header files generated from the embeddable files)
+
+  set(TARGET_EMBEDDABLE_FILES)
+  set(EMBEDDABLE_HEADER_FILES )
+  foreach(embeddable ${EMBEDDABLE_FILES})
+      set(header_file "${GENERATED}/${embeddable}.h")
+      add_custom_command(
+          OUTPUT ${header_file}
+          DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/${embeddable}
+          COMMAND GPCBin2C --input=${CMAKE_CURRENT_SOURCE_DIR}/src/${embeddable} --output=${header_file}
+      )
+      set(TARGET_EMBEDDABLE_FILES ${TARGET_EMBEDDABLE_FILES} "src/${embeddable}")
+      set(EMBEDDABLE_HEADER_FILES ${EMBEDDABLE_HEADER_FILES} ${header_file})
+  endforeach()
+
+  SOURCE_GROUP("Embeddable Files" FILES ${TARGET_EMBEDDABLE_FILES})
+
+  #set(HEADER_FILES ${HEADER_FILES} ${EMBEDDABLE_HEADER_FILES})
+
+endif(EMBEDDABLE_FILES)
 
 # Assemble version components into single string
 set(PROJECT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
@@ -97,9 +134,9 @@ set(TARGET_NAME "${NAKED_PROJECT_NAME}")
 
 # Create the (main) target
 if (LIBRARY_TYPE STREQUAL "shared")
-  add_library(${TARGET_NAME} SHARED ${TARGET_SOURCE_FILES} ${TARGET_HEADER_FILES})
+  add_library(${TARGET_NAME} SHARED ${TARGET_SOURCE_FILES} ${TARGET_EMBEDDABLE_FILES} ${TARGET_HEADER_FILES} ${EMBEDDABLE_HEADER_FILES})
 elseif (LIBRARY_TYPE STREQUAL "static")
-  add_library(${TARGET_NAME} STATIC ${TARGET_SOURCE_FILES} ${TARGET_HEADER_FILES})
+  add_library(${TARGET_NAME} STATIC ${TARGET_SOURCE_FILES} ${TARGET_EMBEDDABLE_FILES} ${TARGET_HEADER_FILES} ${EMBEDDABLE_HEADER_FILES})
 elseif( LIBRARY_TYPE STREQUAL "header-only")
   # TODO: warning if source files defined ?
   add_library(${TARGET_NAME} INTERFACE)
@@ -119,6 +156,15 @@ else()
     endif()
   endif()
 endif()
+
+# Dependencies on external packages
+foreach(pkg ${REQUIRED_PACKAGES})
+  find_package(${pkg} REQUIRED)
+  string(TOUPPER ${pkg} dep_uc)
+  # TODO: handling for PRIVATE, PUBLIC, and INTERFACE linking)
+  target_link_libraries(${TARGET_NAME} PUBLIC ${${dep_uc}_LIBRARIES})
+  target_include_directories(${TARGET_NAME} PUBLIC ${${dep_uc}_INCLUDE_DIRS})
+endforeach()
 
 if (EXAMPLE_EXTERNAL_DEPENDENCY)
 

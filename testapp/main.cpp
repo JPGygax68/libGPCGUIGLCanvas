@@ -1,7 +1,9 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+//#include <SDL2/SDL_opengl.h>
 #include <iostream>
 using std::cout;
+
+#include <gpc/gui/gl/painter.hpp>
 
 int main(int argc, char *argv[])
 {
@@ -15,10 +17,21 @@ int main(int argc, char *argv[])
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     SDL_GLContext glcontext = SDL_GL_CreateContext(window);
     cout << "OpenGL Version " << glGetString(GL_VERSION) << "\n";
-    glClearColor(0, 0, 0, 1);
-    glViewport(0, 0, width, height);
-    glFrustum(-1, 1, -(float)height / width, (float)height / width, 1, 500);
+
+    auto adaptToWindowDimensions = [](unsigned int width, unsigned int height) {
+        glViewport(0, 0, width, height);
+        glLoadIdentity();
+        glFrustum(-1, 1, -(float)height / width, (float)height / width, 1, 500);
+    };
     
+    glClearColor(0, 0, 0, 1);
+
+    adaptToWindowDimensions(width, height);
+
+    gpc::gui::gl::Painter painter;
+
+    painter.init();
+
     SDL_Event event;
     while (1)
     {
@@ -28,9 +41,7 @@ int main(int argc, char *argv[])
             {
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    glViewport(0, 0, event.window.data1, event.window.data2);
-                    glLoadIdentity();
-                    glFrustum(-1, 1, -(float)event.window.data2 / event.window.data1, (float)event.window.data2 / event.window.data1, 1, 500);
+                    adaptToWindowDimensions(event.window.data1, event.window.data2);
                 }
                 break;
 

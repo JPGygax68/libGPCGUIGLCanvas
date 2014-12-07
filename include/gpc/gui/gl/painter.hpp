@@ -1,26 +1,24 @@
 #pragma once
 
 #ifdef _WIN32
-#   ifndef MyOrg_MyLibrary_HEADERONLY
-#      ifdef MyOrg_MyLibrary_EXPORTS
-#          define MYORG_MYLIBRARY_API __declspec(dllexport)
-#      else
-#          define MYORG_MYLIBRARY_API __declspec(dllimport)
-#      endif
-#   else
-#      define MYORG_MYLIBRARY_API
-#   endif
+#include <Windows.h>
 #endif
+#include <GL/glew.h>
 
-//namespace nslevel1 {
+namespace gpc {
+    namespace gui {
+        namespace gl {
 
-class MYORG_MYLIBRARY_API MyClass {
-public:
-    void hello();
-};
+            class Painter {
+            public:
+                Painter();
 
-auto my_free_func(int arg1) -> int;
+                void init();
 
-// inline implementations
+            private:
+                GLuint vertex_shader, fragment_shader;
+            };
 
-//} // nslevel1
+        } // ns gl
+    } // ns gui
+} // ns gpc
