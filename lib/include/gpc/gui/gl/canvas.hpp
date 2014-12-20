@@ -12,6 +12,7 @@
 #include <gpc/gl/wrappers.hpp>
 
 namespace gpc {
+
     namespace gui {
 
         // TODO: RGBF and RGBAF are implementation-independent and belong in
@@ -27,12 +28,12 @@ namespace gpc {
 
         namespace gl {
 
-            class Painter {
+            class Canvas {
             public:
 
                 struct native_color_t { GLfloat components[4]; };
                 
-                Painter(): 
+                Canvas(): 
                     vertex_buffer(0), index_buffer(0),
                     vertex_shader(0), fragment_shader(0) 
                 {
