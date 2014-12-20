@@ -1,0 +1,3 @@
+[submodule "thirdparty/GUICanvas"]
+	path = thirdparty/GUICanvas
+	url = D:/Projects/GPC/GUICanvas
