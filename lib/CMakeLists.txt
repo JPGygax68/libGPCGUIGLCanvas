@@ -1,5 +1,7 @@
 
-add_library(libGPCGUIGLCanvas STATIC "src/canvas.cpp" "include/gpc/gui/gl/canvas.hpp")
+set(SHADER_FILES "src/vertex.glsl" "src/fragment.glsl")
+
+add_library(libGPCGUIGLCanvas STATIC "src/canvas.cpp" "include/gpc/gui/gl/canvas.hpp" ${SHADER_FILES})
 
 target_include_directories(libGPCGUIGLCanvas BEFORE
   PUBLIC
@@ -10,8 +12,6 @@ target_include_directories(libGPCGUIGLCanvas BEFORE
 #--------------------------------------
 # Embed shader files
 #
-
-set(SHADER_FILES "src/vertex.glsl" "src/fragment.glsl")
 
 source_group("Shader files" FILES ${SHADER_FILES})
 

@@ -1,12 +1,13 @@
 #include <cassert>
 #include <cstdio>
+#include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 //#include <SDL2/SDL_opengl.h>
-#include <iostream>
-using std::cout;
-
+#include <gpc/gl/wrappers.hpp>
 #include <gpc/gui/gl/canvas.hpp>
+
+using std::cout;
 
 int main(int argc, char *argv[])
 {
@@ -27,23 +28,23 @@ int main(int argc, char *argv[])
         SDL_GLContext glcontext = SDL_GL_CreateContext(window);
         cout << "OpenGL Version " << glGetString(GL_VERSION) << "\n";
 
+        SDL_GetWindowSize(window, &width, &height);
+
         auto context = SDL_GL_CreateContext(window);
 
         glewInit();
 
-        auto adaptToWindowDimensions = [](unsigned int width, unsigned int height) {
-            glViewport(0, 0, width, height);
-            glLoadIdentity();
-            glFrustum(-1, 1, -(float)height / width, (float)height / width, 1, 500);
-        };
-    
-        glClearColor(0, 0, 0, 1);
-
-        adaptToWindowDimensions(width, height);
+        EXEC_GL(glClearColor, 0.0f, 0.0f, 0.0f, 1.0f);
 
         gpc::gui::gl::Canvas canvas;
 
         canvas.init();
+
+        auto adaptToWindowDimensions = [&](unsigned int width, unsigned int height) {
+            canvas.define_viewport(0, 0, width, height);
+        };
+
+        adaptToWindowDimensions(width, height);
 
         SDL_Event event;
         while (1)
@@ -66,7 +67,9 @@ int main(int argc, char *argv[])
                 }
             }
 
-            canvas.fill_rect(10, 10, 300, 150, canvas.rgb_to_native({1, 1, 1}) );
+            canvas.prepare_context();
+            canvas.fill_rect(100, 100, 300, 150, canvas.rgb_to_native({1, 1, 1}) );
+            canvas.leave_context();
 
             SDL_GL_SwapWindow(window);
 
@@ -77,6 +80,8 @@ int main(int argc, char *argv[])
     }
     catch(const std::exception &e) {
         std::cerr << e.what() << std::endl;
+        std::cerr << "Press RETURN to terminate" << std::endl;
+        std::cin.ignore(1);
     }
     catch(...) {}
 
