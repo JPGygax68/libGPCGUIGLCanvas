@@ -7,6 +7,10 @@ target_include_directories(libGPCGUIGLCanvas BEFORE
     $<INSTALL_INTERFACE:include>
 )
 
+#--------------------------------------
+# Embed shader files
+#
+
 set(SHADER_FILES "src/vertex.glsl" "src/fragment.glsl")
 
 source_group("Shader files" FILES ${SHADER_FILES})
@@ -32,5 +36,12 @@ foreach(shader ${SHADER_FILES})
   target_sources(libGPCGUIGLCanvas PRIVATE ${shader_file})
 endforeach()
 
+#--------------------------------------
+# Libraries
+#
+
 find_package(libGPCGLWrappers REQUIRED)
 target_link_libraries(libGPCGUIGLCanvas PRIVATE libGPCGLWrappers)
+
+find_package(GLEW REQUIRED)
+target_link_libraries(libGPCGUIGLCanvas PRIVATE ${GLEW_LIBRARIES})

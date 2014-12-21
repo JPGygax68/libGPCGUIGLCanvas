@@ -6,7 +6,7 @@
 #include <iostream>
 using std::cout;
 
-#include <gpc/gui/gl/painter.hpp>
+#include <gpc/gui/gl/canvas.hpp>
 
 int main(int argc, char *argv[])
 {
@@ -41,9 +41,9 @@ int main(int argc, char *argv[])
 
         adaptToWindowDimensions(width, height);
 
-        gpc::gui::gl::Painter painter;
+        gpc::gui::gl::Canvas canvas;
 
-        painter.init();
+        canvas.init();
 
         SDL_Event event;
         while (1)
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
                 }
             }
 
-            painter.fill_rect(10, 10, 300, 150, painter.rgb_to_native({1, 1, 1}) );
+            canvas.fill_rect(10, 10, 300, 150, canvas.rgb_to_native({1, 1, 1}) );
 
             SDL_GL_SwapWindow(window);
 
