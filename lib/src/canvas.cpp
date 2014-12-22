@@ -32,25 +32,14 @@ namespace gpc {
                 {
                     assert(vertex_shader == 0);
                     vertex_shader = CALL_GL(glCreateShader, GL_VERTEX_SHADER);
-                    const GLchar *sources[1] = { vertex_code.c_str() };
-                    const GLint   lengths[1] = { vertex_code.size()  };
-                    EXEC_GL(glShaderSource, vertex_shader, 1, sources, lengths);
-                    EXEC_GL(glCompileShader, vertex_shader);
-                    GLint compiled;
-                    EXEC_GL(glGetShaderiv, vertex_shader, GL_COMPILE_STATUS, &compiled);
-                    if (!compiled) throw std::runtime_error(std::string("Failed to compile vertex shader:\n") + gpc::gl::getShaderCompilationLog(vertex_shader));
-                    auto log = gpc::gl::getShaderCompilationLog(vertex_shader);
-                    std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
+                    auto log = gpc::gl::compileShader(vertex_shader, vertex_code);
+                    if (!log.empty()) std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
                     assert(fragment_shader == 0);
                     fragment_shader = CALL_GL(glCreateShader, GL_FRAGMENT_SHADER);
-                    const GLchar *sources[1] = { fragment_code.c_str() };
-                    const GLint   lengths[1] = { fragment_code.size()  };
-                    EXEC_GL(glShaderSource, fragment_shader, 1, sources, lengths);
-                    EXEC_GL(glCompileShader, fragment_shader);
-                    GLint compiled;
-                    EXEC_GL(glGetShaderiv, fragment_shader, GL_COMPILE_STATUS, &compiled);
+                    auto log = gpc::gl::compileShader(fragment_shader, fragment_code);
+                    if (!log.empty()) std::cerr << "Fragment shader compilation log:" << std::endl << log << std::endl;
                 }
                 assert(program == 0);
                 program = CALL_GL(glCreateProgram);
