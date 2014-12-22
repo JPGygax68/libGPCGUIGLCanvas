@@ -1,22 +1,26 @@
 #pragma once
 
+#include <iostream>
 #include <cassert>
 #include <thread>
 #include <mutex>
 #include <string>
+#include <array>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 #include <GL/glew.h>
 
 #include <gpc/gl/wrappers.hpp>
+#include <gpc/gl/utils.hpp>
+
 
 namespace gpc {
 
     namespace gui {
 
         // TODO: RGBF and RGBAF are implementation-independent and belong in
-        // the module defining the Painter concept
+        // the module defining the Canvas concept
 
         struct RGBF {
             GLfloat r, g, b;
@@ -56,14 +60,13 @@ namespace gpc {
 
             protected:
 
-                static std::string vertex_code, fragment_code;
+                static const std::string vertex_code, fragment_code;
 
                 GLuint vertex_buffer, index_buffer;
                 GLuint vertex_shader, fragment_shader;
                 GLuint program;
-                GLint colour_location;
+                //GLint colour_location;
                 GLint vp_width, vp_height;
-                GLint vp_width_location, vp_height_location;
             };
 
             class Canvas : public _CanvasBase {
@@ -95,7 +98,7 @@ namespace gpc {
                     v[2][0] = x + w, v[2][1] = y + h;
                     v[3][0] = x + w, v[3][1] = y;
 
-                    EXEC_GL(glUniform4fv, colour_location, 1, color.components);
+                    gpc::gl::setUniform<4>("color", 2, color.components);
 
                     draw_rect(&v[0][0]);
                 }

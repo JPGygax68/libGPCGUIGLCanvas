@@ -1,8 +1,8 @@
-#version 400
+#version 430
 
 // Viewport width and height
-uniform int vp_width;
-uniform int vp_height;
+layout(location = 0) uniform int vp_width;
+layout(location = 1) uniform int vp_height;
 
 in vec3 vertex_position;
 

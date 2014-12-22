@@ -1,3 +1,6 @@
 [submodule "thirdparty/GUICanvas"]
 	path = thirdparty/GUICanvas
 	url = D:/Projects/GPC/GUICanvas
+[submodule "thirdparty/GLUtils"]
+	path = thirdparty/GLUtils
+	url = D:/Projects/GPC/GLUtils

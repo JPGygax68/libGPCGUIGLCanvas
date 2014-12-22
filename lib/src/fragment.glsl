@@ -1,6 +1,7 @@
-#version 400
+#version 430
 
-uniform vec4 color;
+layout(location = 2) uniform vec4 color;
+
 out vec4 fragment_color;
 
 void main() {

@@ -1,5 +1,6 @@
 #include <string>
 #include <cassert>
+
 #include <gpc/gui/gl/canvas.hpp>
 
 namespace gpc { 
@@ -8,18 +9,17 @@ namespace gpc {
 
         namespace gl {
 
-            std::string _CanvasBase::vertex_code {
+            const std::string _CanvasBase::vertex_code {
                 #include "vertex.glsl.h"
             };
 
-            std::string _CanvasBase::fragment_code{
+            const std::string _CanvasBase::fragment_code{
                 #include "fragment.glsl.h"
             };
 
             _CanvasBase::_CanvasBase() :
                 vertex_buffer(0), index_buffer(0),
-                vertex_shader(0), fragment_shader(0), program(0),
-                colour_location(-1), vp_width_location(-1), vp_height_location(-1)
+                vertex_shader(0), fragment_shader(0), program(0)
             {
             }
 
@@ -36,6 +36,11 @@ namespace gpc {
                     const GLint   lengths[1] = { vertex_code.size()  };
                     EXEC_GL(glShaderSource, vertex_shader, 1, sources, lengths);
                     EXEC_GL(glCompileShader, vertex_shader);
+                    GLint compiled;
+                    EXEC_GL(glGetShaderiv, vertex_shader, GL_COMPILE_STATUS, &compiled);
+                    if (!compiled) throw std::runtime_error(std::string("Failed to compile vertex shader:\n") + gpc::gl::getShaderCompilationLog(vertex_shader));
+                    auto log = gpc::gl::getShaderCompilationLog(vertex_shader);
+                    std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
                     assert(fragment_shader == 0);
@@ -44,16 +49,14 @@ namespace gpc {
                     const GLint   lengths[1] = { fragment_code.size()  };
                     EXEC_GL(glShaderSource, fragment_shader, 1, sources, lengths);
                     EXEC_GL(glCompileShader, fragment_shader);
+                    GLint compiled;
+                    EXEC_GL(glGetShaderiv, fragment_shader, GL_COMPILE_STATUS, &compiled);
                 }
                 assert(program == 0);
                 program = CALL_GL(glCreateProgram);
                 EXEC_GL(glAttachShader, program, vertex_shader);
                 EXEC_GL(glAttachShader, program, fragment_shader);
                 EXEC_GL(glLinkProgram, program);
-
-                vp_width_location  = CALL_GL(glGetUniformLocation, program, "vp_width" );
-                vp_height_location = CALL_GL(glGetUniformLocation, program, "vp_height");
-                colour_location = CALL_GL(glGetUniformLocation, program, "color");
 
                 // Generate a vertex and an index buffer for rectangle vertices
                 assert(vertex_buffer == 0);
@@ -65,8 +68,6 @@ namespace gpc {
                 static GLushort indices[] = { 0, 1, 3, 2 };
                 EXEC_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, index_buffer);
                 EXEC_GL(glBufferData, GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLushort), indices, GL_STATIC_DRAW);
-
-                // TODO...
             }
 
             void _CanvasBase::define_viewport(int x, int y, int width, int height)
@@ -78,8 +79,8 @@ namespace gpc {
             {
                 EXEC_GL(glViewport, 0, 0, vp_width, vp_height);
                 EXEC_GL(glUseProgram, program);
-                EXEC_GL(glUniform1i, vp_width_location, vp_width);
-                EXEC_GL(glUniform1i, vp_height_location, vp_height);
+                gpc::gl::setUniform("vp_width" , 0, vp_width );
+                gpc::gl::setUniform("vp_height", 1, vp_height);
             }
 
             void _CanvasBase::leave_context()

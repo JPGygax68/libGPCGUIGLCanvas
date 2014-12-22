@@ -43,5 +43,8 @@ endforeach()
 find_package(libGPCGLWrappers REQUIRED)
 target_link_libraries(libGPCGUIGLCanvas PRIVATE libGPCGLWrappers)
 
+#find_package(libGPCGLUtils REQUIRED)
+target_link_libraries(libGPCGUIGLCanvas PUBLIC libGPCGLUtils)
+
 find_package(GLEW REQUIRED)
 target_link_libraries(libGPCGUIGLCanvas PRIVATE ${GLEW_LIBRARIES})
