@@ -50,7 +50,7 @@ namespace gpc {
 
                 _CanvasBase();
 
-                void init();
+                void init(bool y_axis_downward);
 
                 void prepare_context();
 
@@ -69,6 +69,7 @@ namespace gpc {
                 GLint vp_width, vp_height;
             };
 
+            template <bool YAxisDown = false>
             class Canvas : public _CanvasBase {
             public:
 
@@ -76,7 +77,7 @@ namespace gpc {
 
                 void init() 
                 {
-                    _CanvasBase::init();
+                    _CanvasBase::init(YAxisDown);
                 }
 
                 void prepare_context()

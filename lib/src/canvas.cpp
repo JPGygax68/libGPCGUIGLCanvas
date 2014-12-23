@@ -23,7 +23,7 @@ namespace gpc {
             {
             }
 
-            void _CanvasBase::init()
+            void _CanvasBase::init(bool y_axis_downward)
             {
                 static std::once_flag flag;
                 std::call_once(flag, []() { glewInit(); });
@@ -32,7 +32,7 @@ namespace gpc {
                 {
                     assert(vertex_shader == 0);
                     vertex_shader = CALL_GL(glCreateShader, GL_VERTEX_SHADER);
-                    auto log = gpc::gl::compileShader(vertex_shader, vertex_code);
+                    auto log = gpc::gl::compileShader(vertex_shader, vertex_code, y_axis_downward ? "#define Y_AXIS_DOWN" : "");
                     if (!log.empty()) std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
