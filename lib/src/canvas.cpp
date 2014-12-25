@@ -101,9 +101,13 @@ namespace gpc {
                 auto i = textures.size();
                 textures.resize(i + 1);
                 EXEC_GL(glGenTextures, 1, &textures[i]);
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, textures[i]);
-                EXEC_GL(glTexImage2D, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, 0);
+                EXEC_GL(glBindTexture, GL_TEXTURE_2D, textures[i]);
+                EXEC_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                EXEC_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                EXEC_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                EXEC_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                EXEC_GL(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                EXEC_GL(glBindTexture, GL_TEXTURE_2D, 0);
                 return textures[i];
             }
 
@@ -115,6 +119,8 @@ namespace gpc {
                 draw_rect(x, y, w, h);
             }
 
+            // TODO: rename (since it repeats the image) ? or overload fill_rect() ?
+
             void _CanvasBase::draw_image(int x, int y, int w, int h, image_handle_t image)
             {
                 static const GLfloat black[4] = { 0, 0, 0, 0 };
@@ -124,11 +130,11 @@ namespace gpc {
                 gpc::gl::setUniform("sampler", 3, 0);
                 gpc::gl::setUniform("origin", 4, origin);
                 //EXEC_GL(glActiveTexture, GL_TEXTURE0);
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, image);
+                EXEC_GL(glBindTexture, GL_TEXTURE_2D, image);
                 gpc::gl::setUniform("render_mode", 5, 2);
 
                 std::vector<RGBA32> pixels(17 * 13);
-                EXEC_GL(glGetTexImage, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+                EXEC_GL(glGetTexImage, GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
 
                 draw_rect(x, y, w, h);
             }
