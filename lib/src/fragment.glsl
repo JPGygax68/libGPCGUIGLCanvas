@@ -16,8 +16,6 @@ void main() {
     }
     else if (render_mode == 2) {
         ivec2 tex_size = textureSize(sampler, 0);
-        ivec2 tex_pos = ivec2(texel_position);
-        tex_pos %= tex_size;
-        fragment_color = texture(sampler, tex_pos);
+        fragment_color = texelFetch(sampler, ivec2(texel_position) % tex_size);
     }
 }
