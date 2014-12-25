@@ -19,16 +19,50 @@ namespace gpc {
 
     namespace gui {
 
-        // TODO: RGBF and RGBAF are implementation-independent and belong in
+        // TODO: RGBFloat and RGBAFloat are implementation-independent and belong in
         // the module defining the Canvas concept
 
-        struct RGBF {
+        struct RGBFloat {
             GLfloat r, g, b;
         };
 
-        struct RGBAF {
+        struct RGBAFloat {
             GLfloat r, g, b, a;
+            RGBAFloat(): RGBAFloat { 0, 0, 0, 1 } {}
+            RGBAFloat(GLfloat r_, GLfloat g_, GLfloat b_, GLfloat a_ = 1): r(r_), g(g_), b(b_), a(a_) {}
+            auto operator / (float dsor) -> RGBAFloat & {
+                r /= dsor, g /= dsor, b /= dsor, a /= dsor;
+                return *this;
+            }
         };
+
+        inline auto 
+        operator + (const RGBAFloat &color1, const RGBAFloat &color2) -> RGBAFloat 
+        {
+            return { color1.r + color2.r, color1.g + color2.g, color1.b + color2.b, color1.a + color2.a };
+        }
+
+        inline auto
+        interpolate(const RGBAFloat &color1, const RGBAFloat &color2, float a) -> RGBAFloat 
+        {
+            RGBAFloat result;
+            result.r = color1.r + a * (color2.r - color1.r);
+            result.g = color1.g + a * (color2.g - color1.g);
+            result.b = color1.b + a * (color2.b - color1.b);
+            result.a = color1.a + a * (color2.a - color1.a);
+            return result;
+        }
+
+        struct RGBA32 {
+            uint8_t components[4];
+        };
+
+        inline auto 
+        fromFloat(const RGBAFloat &from) -> RGBA32 
+        {
+            return { { uint8_t(from.r * 255), uint8_t(from.g * 255), uint8_t(from.b * 255), uint8_t(from.a * 255) } };
+        }
+
 
         namespace gl {
 
@@ -37,14 +71,22 @@ namespace gpc {
 
                 struct native_color_t { GLfloat components[4]; };
 
-                auto rgb_to_native(const RGBF &color) -> native_color_t {
+                typedef GLuint image_handle_t;
+
+                auto rgb_to_native(const RGBFloat &color) -> native_color_t {
                     return native_color_t{ { color.r, color.g, color.b, 1 } };
                 }
-                auto rgba_to_native(const RGBAF &color) -> native_color_t {
+                auto rgba_to_native(const RGBAFloat &color) -> native_color_t {
                     return native_color_t{ { color.r, color.g, color.b, color.a } };
                 }
 
                 void define_viewport(int x, int y, int width, int height);
+
+                auto register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t;
+
+                void fill_rect(int x, int y, int w, int h, const native_color_t &color);
+
+                void draw_image(int x, int y, int w, int h, image_handle_t image);
 
             protected:
 
@@ -56,7 +98,9 @@ namespace gpc {
 
                 void leave_context();
 
-                void draw_rect(const GLint *v);
+                //void draw_rect(const GLint *v);
+
+                void draw_rect(int x, int y, int width, int height);
 
             protected:
 
@@ -65,7 +109,7 @@ namespace gpc {
                 GLuint vertex_buffer, index_buffer;
                 GLuint vertex_shader, fragment_shader;
                 GLuint program;
-                //GLint colour_location;
+                std::vector<GLuint> textures;
                 GLint vp_width, vp_height;
             };
 
@@ -75,33 +119,16 @@ namespace gpc {
 
                 Canvas(): _CanvasBase() {}
 
-                void init() 
-                {
+                void init() {
                     _CanvasBase::init(YAxisDown);
                 }
 
-                void prepare_context()
-                {
+                void prepare_context() {
                     _CanvasBase::prepare_context();
                 }
 
-                void leave_context()
-                {
+                void leave_context() {
                     _CanvasBase::leave_context();
-                }
-
-                // TODO: top-left vs. bottom-left
-                void fill_rect(int x, int y, int w, int h, const native_color_t &color) 
-                {
-                    GLint v[4][2];
-                    v[0][0] = x    , v[0][1] = y;
-                    v[1][0] = x    , v[1][1] = y + h;
-                    v[2][0] = x + w, v[2][1] = y + h;
-                    v[3][0] = x + w, v[3][1] = y;
-
-                    gpc::gl::setUniform<4>("color", 2, color.components);
-
-                    draw_rect(&v[0][0]);
                 }
 
             private:

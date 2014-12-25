@@ -77,8 +77,16 @@ namespace gpc {
                 EXEC_GL(glUseProgram, 0);
             }
 
-            void _CanvasBase::draw_rect(const GLint *v)
+            void _CanvasBase::draw_rect(int x, int y, int w, int h)
             {
+                // Prepare the vertices
+                GLint v[4][2];
+                v[0][0] = x, v[0][1] = y;
+                v[1][0] = x, v[1][1] = y + h;
+                v[2][0] = x + w, v[2][1] = y + h;
+                v[3][0] = x + w, v[3][1] = y;
+
+                // Now send everything to OpenGL
                 EXEC_GL(glEnableClientState, GL_VERTEX_ARRAY);
                 EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, vertex_buffer);
                 EXEC_GL(glBufferData, GL_ARRAY_BUFFER, 4 * 2 * sizeof(GLint), v, GL_STATIC_DRAW);
@@ -86,6 +94,43 @@ namespace gpc {
                 EXEC_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, index_buffer);
                 EXEC_GL(glDrawElements, GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, nullptr);
                 EXEC_GL(glDisableClientState, GL_VERTEX_ARRAY);
+            }
+
+            auto _CanvasBase::register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t
+            {
+                auto i = textures.size();
+                textures.resize(i + 1);
+                EXEC_GL(glGenTextures, 1, &textures[i]);
+                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, textures[i]);
+                EXEC_GL(glTexImage2D, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, 0);
+                return textures[i];
+            }
+
+            void _CanvasBase::fill_rect(int x, int y, int w, int h, const native_color_t &color)
+            {
+                gpc::gl::setUniform("color", 2, color.components);
+                gpc::gl::setUniform("render_mode", 5, 1);
+
+                draw_rect(x, y, w, h);
+            }
+
+            void _CanvasBase::draw_image(int x, int y, int w, int h, image_handle_t image)
+            {
+                static const GLfloat black[4] = { 0, 0, 0, 0 };
+
+                gpc::gl::setUniform("color", 2, black);
+                GLint origin[2] = { x, y };
+                gpc::gl::setUniform("sampler", 3, 0);
+                gpc::gl::setUniform("origin", 4, origin);
+                //EXEC_GL(glActiveTexture, GL_TEXTURE0);
+                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, image);
+                gpc::gl::setUniform("render_mode", 5, 2);
+
+                std::vector<RGBA32> pixels(17 * 13);
+                EXEC_GL(glGetTexImage, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+
+                draw_rect(x, y, w, h);
             }
 
         } // ns gl

@@ -1,9 +1,21 @@
 #version 430
+#extension GL_ARB_texture_rectangle : enable
 
+layout(location = 0) uniform int vp_width;
+layout(location = 1) uniform int vp_height;
 layout(location = 2) uniform vec4 color;
+layout(location = 3) uniform sampler2DRect sampler;
+layout(location = 5) uniform int render_mode;
 
+in  vec2 texel_position;
 out vec4 fragment_color;
 
 void main() {
-    fragment_color = color;
+
+    if (render_mode == 1) {
+        fragment_color = color;
+    }
+    else if (render_mode == 2) {
+        fragment_color = texture2DRect(sampler, texel_position);
+    }
 }
