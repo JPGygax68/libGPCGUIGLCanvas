@@ -1,5 +1,4 @@
 #version 430
-#extension GL_ARB_texture_rectangle : enable
 
 layout(location = 0) uniform int vp_width;
 layout(location = 1) uniform int vp_height;
@@ -19,6 +18,6 @@ void main() {
         ivec2 tex_size = textureSize(sampler, 0);
         ivec2 tex_pos = ivec2(texel_position);
         tex_pos %= tex_size;
-        fragment_color = texture2DRect(sampler, tex_pos);
+        fragment_color = texture(sampler, tex_pos);
     }
 }

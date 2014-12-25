@@ -32,12 +32,14 @@ namespace gpc {
                 {
                     assert(vertex_shader == 0);
                     vertex_shader = CALL_GL(glCreateShader, GL_VERTEX_SHADER);
+                    // TODO: dispense with the error checking and logging in release builds
                     auto log = gpc::gl::compileShader(vertex_shader, vertex_code, y_axis_downward ? "#define Y_AXIS_DOWN" : "");
                     if (!log.empty()) std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
                     assert(fragment_shader == 0);
                     fragment_shader = CALL_GL(glCreateShader, GL_FRAGMENT_SHADER);
+                    // TODO: dispense with the error checking and logging in release builds
                     auto log = gpc::gl::compileShader(fragment_shader, fragment_code);
                     if (!log.empty()) std::cerr << "Fragment shader compilation log:" << std::endl << log << std::endl;
                 }
