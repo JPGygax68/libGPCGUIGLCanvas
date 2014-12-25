@@ -106,6 +106,8 @@ int main(int argc, char *argv[])
             
             y = 50;
             canvas.draw_image(400, y, 17, 13, test_image_handle);
+            y += 13 + 5;
+            canvas.draw_image(400, y, 3*17+8, 3*13+5, test_image_handle);
 
             canvas.leave_context();
 

@@ -16,6 +16,9 @@ void main() {
         fragment_color = color;
     }
     else if (render_mode == 2) {
-        fragment_color = texture2DRect(sampler, texel_position);
+        ivec2 tex_size = textureSize(sampler, 0);
+        ivec2 tex_pos = ivec2(texel_position);
+        tex_pos %= tex_size;
+        fragment_color = texture2DRect(sampler, tex_pos);
     }
 }
