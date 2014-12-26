@@ -4,6 +4,31 @@ add_executable(TestApp main.cpp)
 
 target_link_libraries(TestApp libGPCGUIGLCanvas)
 
+# Embed a font
+
+if (NOT GPCFontRasterizer)
+  find_package(GPCFontRasterizer REQUIRED)
+endif()
+
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-20.rft
+  COMMAND GPCFontRasterizer input="${CMAKE_CURRENT_SOURCE_DIR}/LiberationSans-Regular.ttf" size=20 output="${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-20.rft"
+)
+
+if (NOT GPCBin2C)
+  find_package(GPCBin2C REQUIRED)
+endif()
+
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-20.rft.h
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-20.rft
+  COMMAND GPCBin2C --input=${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-20.rft --output=${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-20.rft.h
+)
+
+target_sources(TestApp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/LiberationSans-Regular-20.rft.h)
+
+target_include_directories(TestApp PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
 # We need SDL2
 
 find_library(SDL2_LIB SDL2)
