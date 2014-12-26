@@ -119,12 +119,19 @@ namespace gpc {
 
             void _CanvasBase::draw_image(int x, int y, int w, int h, image_handle_t image)
             {
+                draw_image(x, y, w, h, image, 0, 0);
+            }
+
+            void _CanvasBase::draw_image(int x, int y, int w, int h, image_handle_t image, int offset_x, int offset_y)
+            {
                 static const GLfloat black[4] = { 0, 0, 0, 0 };
 
                 gpc::gl::setUniform("color", 2, black);
                 GLint origin[2] = { x, y };
                 gpc::gl::setUniform("sampler", 3, 0);
                 gpc::gl::setUniform("origin", 4, origin);
+                GLint offset[2] = { offset_x, offset_y };
+                gpc::gl::setUniform("offset", 6, offset);
                 //EXEC_GL(glActiveTexture, GL_TEXTURE0);
                 EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, image);
                 gpc::gl::setUniform("render_mode", 5, 2);

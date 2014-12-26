@@ -5,6 +5,7 @@ layout(location = 1) uniform int vp_height;
 layout(location = 2) uniform vec4 color;
 layout(location = 3) uniform sampler2DRect sampler;
 layout(location = 5) uniform int render_mode;
+layout(location = 6) uniform ivec2 offset;
 
 in  vec2 texel_position;
 out vec4 fragment_color;
@@ -16,6 +17,6 @@ void main() {
     }
     else if (render_mode == 2) {
         ivec2 tex_size = textureSize(sampler, 0);
-        fragment_color = texelFetch(sampler, ivec2(texel_position) % tex_size);
+        fragment_color = texelFetch(sampler, (ivec2(texel_position) + offset) % tex_size);
     }
 }

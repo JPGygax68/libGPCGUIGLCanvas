@@ -95,9 +95,12 @@ int main(int argc, char *argv[])
                 }
             }
 
-            int x, y;
+            static const int SEPARATION = 20;
+            int x, y, w, h;
 
             canvas.prepare_context();
+
+            // TODO: use GPC layout module ?
 
             x = 50, y = 50;
             canvas.fill_rect(50, y, 150, 150, canvas.rgb_to_native({ 1, 0, 0 }));
@@ -106,15 +109,22 @@ int main(int argc, char *argv[])
             canvas.fill_rect(50, y, 150, 150, canvas.rgb_to_native({ 0, 0, 1 }));
             canvas.fill_rect(50 + 150 + 10, y, 150, 150, canvas.rgb_to_native({ 1, 1, 1 }));
             
-            x = 400, y = 50;
+            x += 150 + 10 + 150 + SEPARATION, y = 50;
+            // Single image
             canvas.draw_image(x, y, 170, 130, test_image_handle);
-            y += 130 + 5;
-            canvas.draw_image(x, y, 3*170+8, 3*130+5, test_image_handle);
-
-            x = 1000, y = 50;
-            canvas.set_clipping_rect(x + 20, y + 20, 3*170+8 - 40, 3*130+5 - 40);
-            canvas.draw_image(x, y, 3*170+8, 3*130+5, test_image_handle);
+            x += 170 + SEPARATION;
+            // Repeated image
+            w = 2 * 170 + 8, h = 2 * 130 + 5;
+            canvas.draw_image(x, y, w, h, test_image_handle);
+            // Repeated, with clipping
+            x += w + SEPARATION;
+            canvas.set_clipping_rect(x + 20, y + 20, w - 40, h - 40);
+            canvas.draw_image(x, y, w, h, test_image_handle);
             canvas.cancel_clipping();
+
+            // Image with offset
+            x = 50, y += 150 + 10 + 150 + SEPARATION;
+            canvas.draw_image(x, y, w, h, test_image_handle, 20, 20);
 
             canvas.leave_context();
 

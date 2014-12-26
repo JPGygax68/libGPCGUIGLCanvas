@@ -92,6 +92,8 @@ namespace gpc {
 
                 void draw_image(int x, int y, int w, int h, image_handle_t image);
 
+                void draw_image(int x, int y, int w, int h, image_handle_t image, int offset_x, int offset_y);
+
                 void set_clipping_rect(int x, int y, int w, int h);
 
                 void cancel_clipping();
