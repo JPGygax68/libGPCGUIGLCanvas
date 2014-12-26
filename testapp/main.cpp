@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
         EXEC_GL(glClearColor, 0.0f, 0.0f, 0.0f, 1.0f);
 
-        typedef Canvas<false> MyCanvas;
+        typedef Canvas<true> MyCanvas;
         MyCanvas canvas;
 
         canvas.init();
@@ -95,22 +95,25 @@ int main(int argc, char *argv[])
                 }
             }
 
+            int x, y;
+
             canvas.prepare_context();
 
-            int y = 50;
+            x = 50, y = 50;
             canvas.fill_rect(50, y, 150, 150, canvas.rgb_to_native({ 1, 0, 0 }));
             canvas.fill_rect(50 + 150 + 10, y, 150, 150, canvas.rgb_to_native({ 0, 1, 0 }));
             y += 150 + 10;
             canvas.fill_rect(50, y, 150, 150, canvas.rgb_to_native({ 0, 0, 1 }));
             canvas.fill_rect(50 + 150 + 10, y, 150, 150, canvas.rgb_to_native({ 1, 1, 1 }));
             
-            y = 50;
-            canvas.draw_image(400, y, 170, 130, test_image_handle);
+            x = 400, y = 50;
+            canvas.draw_image(x, y, 170, 130, test_image_handle);
             y += 130 + 5;
-            canvas.draw_image(400, y, 3*170+8, 3*130+5, test_image_handle);
+            canvas.draw_image(x, y, 3*170+8, 3*130+5, test_image_handle);
 
-            canvas.set_clipping_rect(1000 + 20, y + 20, 3*170+8 - 40, 3*130+5 - 40);
-            canvas.draw_image(1000, y, 3*170+8, 3*130+5, test_image_handle);
+            x = 1000, y = 50;
+            canvas.set_clipping_rect(x + 20, y + 20, 3*170+8 - 40, 3*130+5 - 40);
+            canvas.draw_image(x, y, 3*170+8, 3*130+5, test_image_handle);
             canvas.cancel_clipping();
 
             canvas.leave_context();
