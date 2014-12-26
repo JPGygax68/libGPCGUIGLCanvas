@@ -80,6 +80,10 @@ namespace gpc {
                     return native_color_t{ { color.r, color.g, color.b, color.a } };
                 }
 
+                void prepare_context();
+
+                void leave_context();
+
                 void define_viewport(int x, int y, int width, int height);
 
                 auto register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t;
@@ -88,15 +92,15 @@ namespace gpc {
 
                 void draw_image(int x, int y, int w, int h, image_handle_t image);
 
+                void set_clipping_rect(int x, int y, int w, int h);
+
+                void cancel_clipping();
+
             protected:
 
                 _CanvasBase();
 
                 void init(bool y_axis_downward);
-
-                void prepare_context();
-
-                void leave_context();
 
                 //void draw_rect(const GLint *v);
 
@@ -114,25 +118,32 @@ namespace gpc {
             };
 
             template <bool YAxisDown = false>
-            class Canvas : public _CanvasBase {
+            class Canvas;
+            
+            template <>
+            class Canvas<false>: public _CanvasBase {
             public:
 
-                Canvas(): _CanvasBase() {}
+                void init() { _CanvasBase::init(false); }
 
-                void init() {
-                    _CanvasBase::init(YAxisDown);
+                void set_clipping_rect(int x, int y, int w, int h)
+                {
+                    EXEC_GL(glScissor, x, y, w, h);
+                    EXEC_GL(glEnable, GL_SCISSOR_TEST);
                 }
+            };
 
-                void prepare_context() {
-                    _CanvasBase::prepare_context();
+            template <>
+            class Canvas<true> : public _CanvasBase {
+            public:
+
+                void init() { _CanvasBase::init(true); }
+
+                void set_clipping_rect(int x, int y, int w, int h)
+                {
+                    EXEC_GL(glScissor, x, vp_height - (y + h), w, h);
+                    EXEC_GL(glEnable, GL_SCISSOR_TEST);
                 }
-
-                void leave_context() {
-                    _CanvasBase::leave_context();
-                }
-
-            private:
-
             };
 
         } // ns gl

@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
         EXEC_GL(glClearColor, 0.0f, 0.0f, 0.0f, 1.0f);
 
-        typedef Canvas<true> MyCanvas;
+        typedef Canvas<false> MyCanvas;
         MyCanvas canvas;
 
         canvas.init();
@@ -70,8 +70,8 @@ int main(int argc, char *argv[])
 
         adaptToWindowDimensions(width, height);
 
-        auto test_image = makeColorInterpolatedRectangle(17, 13, {{ {1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}, {1, 1, 1, 1}} });
-        auto test_image_handle = canvas.register_rgba_image(17, 13, &test_image[0]);
+        auto test_image = makeColorInterpolatedRectangle(170, 130, {{ {1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}, {1, 1, 1, 1}} });
+        auto test_image_handle = canvas.register_rgba_image(170, 130, &test_image[0]);
 
 
         SDL_Event event;
@@ -105,9 +105,13 @@ int main(int argc, char *argv[])
             canvas.fill_rect(50 + 150 + 10, y, 150, 150, canvas.rgb_to_native({ 1, 1, 1 }));
             
             y = 50;
-            canvas.draw_image(400, y, 17, 13, test_image_handle);
-            y += 13 + 5;
-            canvas.draw_image(400, y, 3*17+8, 3*13+5, test_image_handle);
+            canvas.draw_image(400, y, 170, 130, test_image_handle);
+            y += 130 + 5;
+            canvas.draw_image(400, y, 3*170+8, 3*130+5, test_image_handle);
+
+            canvas.set_clipping_rect(1000 + 20, y + 20, 3*170+8 - 40, 3*130+5 - 40);
+            canvas.draw_image(1000, y, 3*170+8, 3*130+5, test_image_handle);
+            canvas.cancel_clipping();
 
             canvas.leave_context();
 

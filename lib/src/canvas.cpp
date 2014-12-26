@@ -129,10 +129,12 @@ namespace gpc {
                 EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, image);
                 gpc::gl::setUniform("render_mode", 5, 2);
 
-                std::vector<RGBA32> pixels(17 * 13);
-                EXEC_GL(glGetTexImage, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
-
                 draw_rect(x, y, w, h);
+            }
+
+            void _CanvasBase::cancel_clipping()
+            {
+                EXEC_GL(glDisable, GL_SCISSOR_TEST);
             }
 
         } // ns gl
