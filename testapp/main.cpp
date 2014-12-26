@@ -1,16 +1,24 @@
 #include <cassert>
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 //#include <SDL2/SDL_opengl.h>
 #include <gpc/gl/wrappers.hpp>
 #include <gpc/gui/gl/canvas.hpp>
+#include <gpc/fonts/RasterizedFont.hpp>
+#include <gpc/fonts/cereal.hpp>
+#include <cereal/archives/binary.hpp>
 
 using std::cout;
 using gpc::gui::RGBAFloat;
 using gpc::gui::RGBA32;
 using gpc::gui::gl::Canvas;
+
+static char liberations_sans_data[] = {
+#include "LiberationSans-Regular-20.rft.h"
+};
 
 static auto
 makeColorInterpolatedRectangle(size_t width, size_t height, const std::array<RGBAFloat,4> &corner_colors) -> std::vector<RGBA32>
@@ -38,11 +46,15 @@ int main(int argc, char *argv[])
 
         int width = 640, height = 480;
 
+        std::string data_string(liberations_sans_data, liberations_sans_data + sizeof(liberations_sans_data));
+        std::stringstream sstr(data_string);
+        cereal::BinaryInputArchive ar(sstr);
+        gpc::fonts::RasterizedFont rfont;
+        ar >> rfont;
+        
         SDL_Init(SDL_INIT_VIDEO);
         IMG_Init(IMG_INIT_PNG);
     
-        auto img_surf = IMG_Load("../../assets/uniform_fill.png");
-
         SDL_Rect disp_bounds;
         SDL_GetDisplayBounds(0, &disp_bounds);
         SDL_Window *window = SDL_CreateWindow("Graphics Application",
