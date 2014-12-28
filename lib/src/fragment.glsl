@@ -27,16 +27,16 @@ void main() {
         fragment_color = texelFetch(sampler, (ivec2(texel_position) + offset) % tex_size);
     }
     // Glyph rendering
-    else { // if (render_mode == 3) {
+    else if (render_mode == 3) {
 
-        int x_min = glyph_cbox.x, x_max = glyph_cbox.y, y_min = glyph_cbox.z, y_max = glyph_cbox.w;
+        int x_min = glyph_cbox[0], x_max = glyph_cbox[1], y_min = glyph_cbox[2], y_max = glyph_cbox[3];
 
-        int col = int(texel_position.x);
-#ifdef Y_AXIS_DOWN
-        int row = int(texel_position.y);
-#else
-        int row = y_max - y_min - int(texel_position.y) - 1;
-#endif
+        int col = int(texel_position.x) - x_min;
+        #ifdef Y_AXIS_DOWN
+        int row = int(texel_position.y) + y_max - 1;
+        #else
+        int row = (y_max - y_min) - (int(texel_position.y) - y_min) - 1;
+        #endif
 
         float value = texelFetch(font_pixels, glyph_base + row * (x_max - x_min) + col);
 

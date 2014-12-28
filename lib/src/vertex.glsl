@@ -26,8 +26,12 @@ void main() {
 
         ivec2 pixel_position = position + ivec2(vertex_position);
 
-        gl_Position = vec4(2 * pixel_position.x / float(vp_width) - 1, -(2 * pixel_position.y / float(vp_height) - 1), 0.0, 1.0);
+        #ifdef Y_AXIS_DOWN
+        gl_Position = vec4(2 * pixel_position.x / float(vp_width) - 1, - (2 * pixel_position.y / float(vp_height) - 1), 0.0, 1.0);
+        #else
+        gl_Position = vec4(2 * pixel_position.x / float(vp_width) - 1, 2 * pixel_position.y / float(vp_height) - 1, 0.0, 1.0);
+        #endif
 
-        texel_position = vec2(vertex_position) - vec2(glyph_cbox.xz);
+        texel_position = vertex_position;
     }
 }

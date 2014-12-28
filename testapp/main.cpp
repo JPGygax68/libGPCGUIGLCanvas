@@ -139,7 +139,8 @@ int main(int argc, char *argv[])
 
             // Some text
             x = 50; y += 20;
-            canvas.draw_text(my_font, x, y, "ABCDEFabcdef", 10);
+            canvas.draw_text(my_font, x, y, "ABCDEFabcdef,;", 14);
+            canvas.fill_rect(x, y - 1, x + 150, 1, canvas.rgba_to_native({ 1, 0, 0, 0.2f }));
 
             canvas.leave_context();
 

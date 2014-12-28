@@ -121,6 +121,8 @@ namespace gpc {
 
             private:
 
+                // TODO: move this back into non-template base class
+
                 static auto vertex_code() -> std::string {
 
                     return std::string {

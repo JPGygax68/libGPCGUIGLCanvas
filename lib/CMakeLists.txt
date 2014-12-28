@@ -37,7 +37,7 @@ foreach(shader ${SHADER_FILES})
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${shader}
     COMMAND GPCBin2C --input=${CMAKE_CURRENT_SOURCE_DIR}/${shader} --output=${shader_file}
   )
-  target_sources(libGPCGUIGLCanvas INTERFACE ${shader_file})
+  target_sources(libGPCGUIGLCanvas PUBLIC ${shader_file})
 endforeach()
 
 #--------------------------------------
