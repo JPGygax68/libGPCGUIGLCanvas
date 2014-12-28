@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
         EXEC_GL(glClearColor, 0.0f, 0.0f, 0.0f, 1.0f);
 
-        typedef Canvas<true> MyCanvas;
+        typedef Canvas<false> MyCanvas;
         MyCanvas canvas;
 
         canvas.init();

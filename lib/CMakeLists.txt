@@ -22,7 +22,7 @@ source_group("Shader files" FILES ${SHADER_FILES})
 # TODO: make this into a CMake module
 
 set(GENERATED "${CMAKE_CURRENT_BINARY_DIR}/generated")
-include_directories(${GENERATED})
+target_include_directories(libGPCGUIGLCanvas PUBLIC ${GENERATED})
 
 # Find the GPC Bin2C utility
 find_package(GPCBin2C REQUIRED)
@@ -37,7 +37,7 @@ foreach(shader ${SHADER_FILES})
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${shader}
     COMMAND GPCBin2C --input=${CMAKE_CURRENT_SOURCE_DIR}/${shader} --output=${shader_file}
   )
-  target_sources(libGPCGUIGLCanvas PRIVATE ${shader_file})
+  target_sources(libGPCGUIGLCanvas INTERFACE ${shader_file})
 endforeach()
 
 #--------------------------------------
