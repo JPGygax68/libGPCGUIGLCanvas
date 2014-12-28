@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
         auto test_image = makeColorInterpolatedRectangle(170, 130, {{ {1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}, {1, 1, 1, 1}} });
         auto test_image_handle = canvas.register_rgba_image(170, 130, &test_image[0]);
-
+        auto my_font = canvas.register_font(rfont);
 
         SDL_Event event;
         while (1)
@@ -108,13 +108,12 @@ int main(int argc, char *argv[])
             }
 
             static const int SEPARATION = 20;
-            int x, y, w, h;
+            int x = 50, y = 50, w, h;
 
             canvas.prepare_context();
 
             // TODO: use GPC layout module ?
 
-            x = 50, y = 50;
             canvas.fill_rect(50, y, 150, 150, canvas.rgb_to_native({ 1, 0, 0 }));
             canvas.fill_rect(50 + 150 + 10, y, 150, 150, canvas.rgb_to_native({ 0, 1, 0 }));
             y += 150 + 10;
@@ -133,10 +132,14 @@ int main(int argc, char *argv[])
             canvas.set_clipping_rect(x + 20, y + 20, w - 40, h - 40);
             canvas.draw_image(x, y, w, h, test_image_handle);
             canvas.cancel_clipping();
-
             // Image with offset
-            x = 50, y += 150 + 10 + 150 + SEPARATION;
+            x += w + 20;
             canvas.draw_image(x, y, w, h, test_image_handle, 20, 20);
+            y += 310;
+
+            // Some text
+            x = 50; y += 20;
+            canvas.draw_text(my_font, x, y, "ABCDEFabcdef", 10);
 
             canvas.leave_context();
 

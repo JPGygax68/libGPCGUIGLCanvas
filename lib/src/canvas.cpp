@@ -23,7 +23,7 @@ namespace gpc {
             {
             }
 
-            void _CanvasBase::init(bool y_axis_downward)
+            void _CanvasBase::init(bool y_axis_down)
             {
                 static std::once_flag flag;
                 std::call_once(flag, []() { glewInit(); });
@@ -33,14 +33,14 @@ namespace gpc {
                     assert(vertex_shader == 0);
                     vertex_shader = CALL_GL(glCreateShader, GL_VERTEX_SHADER);
                     // TODO: dispense with the error checking and logging in release builds
-                    auto log = gpc::gl::compileShader(vertex_shader, vertex_code, y_axis_downward ? "#define Y_AXIS_DOWN" : "");
+                    auto log = gpc::gl::compileShader(vertex_shader, vertex_code, y_axis_down ? "#define Y_AXIS_DOWN" : "");
                     if (!log.empty()) std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
                     assert(fragment_shader == 0);
                     fragment_shader = CALL_GL(glCreateShader, GL_FRAGMENT_SHADER);
                     // TODO: dispense with the error checking and logging in release builds
-                    auto log = gpc::gl::compileShader(fragment_shader, fragment_code);
+                    auto log = gpc::gl::compileShader(fragment_shader, fragment_code, y_axis_down ? "#define Y_AXIS_DOWN" : "");
                     if (!log.empty()) std::cerr << "Fragment shader compilation log:" << std::endl << log << std::endl;
                 }
                 assert(program == 0);
@@ -96,17 +96,19 @@ namespace gpc {
                 EXEC_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, index_buffer);
                 EXEC_GL(glDrawElements, GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, nullptr);
                 EXEC_GL(glDisableClientState, GL_VERTEX_ARRAY);
+                EXEC_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
+                EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, 0);
             }
 
             auto _CanvasBase::register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t
             {
-                auto i = textures.size();
-                textures.resize(i + 1);
-                EXEC_GL(glGenTextures, 1, &textures[i]);
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, textures[i]);
+                auto i = image_textures.size();
+                image_textures.resize(i + 1);
+                EXEC_GL(glGenTextures, 1, &image_textures[i]);
+                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, image_textures[i]);
                 EXEC_GL(glTexImage2D, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
                 EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, 0);
-                return textures[i];
+                return image_textures[i];
             }
 
             void _CanvasBase::fill_rect(int x, int y, int w, int h, const native_color_t &color)
@@ -137,11 +139,56 @@ namespace gpc {
                 gpc::gl::setUniform("render_mode", 5, 2);
 
                 draw_rect(x, y, w, h);
+
+                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, 0);
             }
 
             void _CanvasBase::cancel_clipping()
             {
                 EXEC_GL(glDisable, GL_SCISSOR_TEST);
+            }
+
+            // TODO: free resources allocated for fonts
+
+            auto _CanvasBase::register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t
+            {
+                font_handle_t handle = managed_fonts.size();
+
+                managed_fonts.emplace_back( ManagedFont(rfont) );
+                auto &mfont = managed_fonts.back();
+
+                mfont.storePixels();
+                mfont.createQuads<true>(); // TODO: real template parameter
+
+                return handle;
+            }
+
+            // ManagedFont private class --------------------------------------
+
+            void _CanvasBase::ManagedFont::storePixels()
+            {
+                buffer_textures.resize(variants.size());
+                EXEC_GL(glGenBuffers, buffer_textures.size(), &buffer_textures[0]);
+
+                textures.resize(variants.size());
+                EXEC_GL(glGenTextures, textures.size(), &textures[0]);
+
+                for (auto i_var = 0U; i_var < variants.size(); i_var++) {
+
+                    EXEC_GL(glBindBuffer, GL_TEXTURE_BUFFER, buffer_textures[i_var]);
+
+                    auto &variant = variants[i_var];
+
+                    // Load the pixels into a texture buffer object
+                    EXEC_GL(glBufferStorage, GL_TEXTURE_BUFFER, variant.pixels.size(), &variant.pixels[0], 0); // TODO: really no flags ?
+
+                    // Bind the texture buffer object as a.. texture
+                    EXEC_GL(glBindTexture, GL_TEXTURE_BUFFER, textures[i_var]);
+                    EXEC_GL(glTexBuffer, GL_TEXTURE_BUFFER, GL_R8, buffer_textures[i_var]);
+                }
+
+                EXEC_GL(glBindBuffer, GL_TEXTURE_BUFFER, 0);
+                EXEC_GL(glBindTexture, GL_TEXTURE_BUFFER, 0);
             }
 
         } // ns gl

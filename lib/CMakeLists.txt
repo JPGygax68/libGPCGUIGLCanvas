@@ -1,7 +1,11 @@
 
 set(SHADER_FILES "src/vertex.glsl" "src/fragment.glsl")
 
-add_library(libGPCGUIGLCanvas STATIC "src/canvas.cpp" "include/gpc/gui/gl/canvas.hpp" ${SHADER_FILES})
+add_library(libGPCGUIGLCanvas STATIC 
+  "src/canvas.cpp"
+  "include/gpc/gui/gl/canvas.hpp"
+  ${SHADER_FILES}
+)
 
 target_include_directories(libGPCGUIGLCanvas BEFORE
   PUBLIC
@@ -48,3 +52,13 @@ target_link_libraries(libGPCGUIGLCanvas PUBLIC libGPCGLUtils)
 
 find_package(GLEW REQUIRED)
 target_link_libraries(libGPCGUIGLCanvas PRIVATE ${GLEW_LIBRARIES})
+
+# GPC Fonts (we need the Rasterized Font module)
+
+find_package(libGPCFonts REQUIRED)
+target_link_libraries(libGPCGUIGLCanvas PUBLIC libGPCFonts)
+
+# Cereal
+
+# Cereal does not have a package and must be made available by other means
+

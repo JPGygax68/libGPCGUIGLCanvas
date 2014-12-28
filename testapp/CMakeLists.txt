@@ -73,10 +73,6 @@ target_include_directories(TestApp PRIVATE ${OPENGL_INCLUDE_DIR})
 find_package(libGPCGLWrappers REQUIRED)
 target_link_libraries(TestApp PRIVATE libGPCGLWrappers)
 
-# Cereal
-
-# Cereal does not have a package and must be made available by other means
-
 # GPC Fonts
 
 find_package(libGPCFonts REQUIRED)
