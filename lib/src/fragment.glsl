@@ -30,15 +30,16 @@ void main() {
     else if (render_mode == 3) {
 
         int x_min = glyph_cbox[0], x_max = glyph_cbox[1], y_min = glyph_cbox[2], y_max = glyph_cbox[3];
+        int w = x_max - x_min, h = y_max - y_min;
 
         int col = int(texel_position.x) - x_min;
         #ifdef Y_AXIS_DOWN
         int row = int(texel_position.y) + y_max - 1;
         #else
-        int row = (y_max - y_min) - (int(texel_position.y) - y_min) - 1;
+        int row = y_max - int(texel_position.y) - 1;
         #endif
 
-        float value = texelFetch(font_pixels, glyph_base + row * (x_max - x_min) + col);
+        float value = texelFetch(font_pixels, glyph_base + row * w + col);
 
         fragment_color = vec4(value, value, value, 1.0);
     }

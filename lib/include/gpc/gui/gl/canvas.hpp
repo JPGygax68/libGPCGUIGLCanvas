@@ -214,7 +214,10 @@ namespace gpc {
             template <bool YAxisDown>
             void Canvas<YAxisDown>::prepare_context()
             {
+                // TODO: does all this really belong here, or should there be a one-time init independent of viewport ?
                 EXEC_GL(glViewport, 0, 0, vp_width, vp_height);
+                EXEC_GL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                EXEC_GL(glEnable, GL_BLEND);
                 EXEC_GL(glUseProgram, program);
                 gpc::gl::setUniform("vp_width", 0, vp_width);
                 gpc::gl::setUniform("vp_height", 1, vp_height);

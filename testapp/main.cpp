@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
         EXEC_GL(glClearColor, 0.0f, 0.0f, 0.0f, 1.0f);
 
-        typedef Canvas<false> MyCanvas;
+        typedef Canvas<true> MyCanvas;
         MyCanvas canvas;
 
         canvas.init();
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
             // Some text
             x = 50; y += 20;
             canvas.draw_text(my_font, x, y, "ABCDEFabcdef,;", 14);
-            canvas.fill_rect(x, y - 1, x + 150, 1, canvas.rgba_to_native({ 1, 0, 0, 0.2f }));
+            canvas.fill_rect(x, y - 1, x + 150, 1, canvas.rgba_to_native({ 1, 0, 0, 0.5f }));
 
             canvas.leave_context();
 
