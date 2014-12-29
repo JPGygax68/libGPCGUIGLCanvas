@@ -284,9 +284,9 @@ namespace gpc {
                 static const GLfloat black[4] = { 0, 0, 0, 0 };
 
                 gpc::gl::setUniform("color", 2, black);
-                GLint origin[2] = { x, y };
+                GLint position[2] = { x, y };
                 gpc::gl::setUniform("sampler", 3, 0);
-                gpc::gl::setUniform("origin", 4, origin);
+                gpc::gl::setUniform("position", 4, position);
                 GLint offset[2] = { offset_x, offset_y };
                 gpc::gl::setUniform("offset", 6, offset);
                 //EXEC_GL(glActiveTexture, GL_TEXTURE0);
@@ -361,7 +361,7 @@ namespace gpc {
                     GLint cbox[4] = { glyph.cbox.x_min, glyph.cbox.x_max, glyph.cbox.y_min, glyph.cbox.y_max };
                     setUniform("glyph_cbox", 9, cbox);
                     GLint position[2] = { x, y };
-                    setUniform("position", 10, position);
+                    setUniform("position", 4, position);
 
                     GLint base = 4 * glyph_index;
                     EXEC_GL(glDrawArrays, GL_QUADS, base, 4);

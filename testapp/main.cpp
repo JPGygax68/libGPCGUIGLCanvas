@@ -139,8 +139,13 @@ int main(int argc, char *argv[])
 
             // Some text
             x = 50; y += 20;
-            canvas.draw_text(my_font, x, y, "ABCDEFabcdef,;", 14);
-            canvas.fill_rect(x, y - 1, x + 150, 1, canvas.rgba_to_native({ 1, 0, 0, 0.5f }));
+            // Ascent (estimated) = 15; TODO: correct for top-down, but for bottom-up, descent should be used
+            canvas.draw_text(my_font, x, y+15, "ABCDEFabcdef,;", 14);
+            canvas.fill_rect(x, y+15 - 1, x + 150, 1, canvas.rgba_to_native({ 1, 0, 0, 0.5f }));
+            y += 20;
+            // With clipping
+            y += 10;
+            //canvas.set_clipping_rect(x + 5, y)
 
             canvas.leave_context();
 
