@@ -4,3 +4,9 @@
 [submodule "thirdparty/GLUtils"]
 	path = thirdparty/GLUtils
 	url = D:/Projects/GPC/GLUtils
+[submodule "libGPCGUICanvas"]
+	path = libGPCGUICanvas
+	url = https://github.com/JPGygax68/libGPCGUICanvas.git
+[submodule "thirdparty/libGPCGUICanvas"]
+	path = thirdparty/libGPCGUICanvas
+	url = https://github.com/JPGygax68/libGPCGUICanvas.git

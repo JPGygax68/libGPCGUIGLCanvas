@@ -9,6 +9,8 @@ set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
 
 add_subdirectory(thirdparty/GLUtils)
+add_subdirectory(thirdparty/libGPCGUICanvas/lib)
+add_subdirectory(thirdparty/libGPCGUICanvas/testsuite)
 
 add_subdirectory(lib)
 
