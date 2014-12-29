@@ -11,6 +11,8 @@
 #include <gpc/fonts/cereal.hpp>
 #include <cereal/archives/binary.hpp>
 
+#include <gpc/gui/canvas_testsuite.hpp>
+
 using std::cout;
 using gpc::gui::RGBAFloat;
 using gpc::gui::RGBA32;

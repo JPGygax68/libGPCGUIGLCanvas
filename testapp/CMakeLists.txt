@@ -78,3 +78,7 @@ target_link_libraries(TestApp PRIVATE libGPCGLWrappers)
 find_package(libGPCFonts REQUIRED)
 #target_include_directories(TestApp PRIVATE libGPCFonts)
 target_link_libraries(TestApp PRIVATE libGPCFonts)
+
+# GPC GUI Canvas Test Suite
+
+target_link_libraries(TestApp PRIVATE libGPCGUICanvasTestsuite)
