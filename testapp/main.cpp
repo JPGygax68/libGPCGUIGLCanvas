@@ -145,7 +145,9 @@ int main(int argc, char *argv[])
             y += 20;
             // With clipping
             y += 10;
-            //canvas.set_clipping_rect(x + 5, y)
+            canvas.set_clipping_rect(x + 5, y+3, 100, 20 - 3 - 3);
+            canvas.draw_text(my_font, x, y + 15, "Clipping clipping clipping", 26);
+            canvas.cancel_clipping();
 
             canvas.leave_context();
 
