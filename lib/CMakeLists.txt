@@ -44,6 +44,8 @@ endforeach()
 # Libraries
 #
 
+target_link_libraries(libGPCGUIGLCanvas PUBLIC libGPCGUICanvas)
+
 find_package(libGPCGLWrappers REQUIRED)
 target_link_libraries(libGPCGUIGLCanvas PRIVATE libGPCGLWrappers)
 
