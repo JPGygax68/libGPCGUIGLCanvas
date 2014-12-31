@@ -47,6 +47,8 @@ namespace gpc {
 
                 void define_viewport(int x, int y, int width, int height);
 
+                void clear();
+
                 auto register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t;
 
                 void fill_rect(int x, int y, int w, int h, const native_color_t &color);
@@ -122,6 +124,7 @@ namespace gpc {
             {
                 static std::once_flag flag;
                 std::call_once(flag, []() { glewInit(); });
+                //glewInit();
 
                 // Upload and compile our shader program
                 {
@@ -157,9 +160,9 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::define_viewport(int x, int y, int width, int height)
+            void Canvas<YAxisDown>::define_viewport(int x, int y, int w, int h)
             {
-                vp_width = width, vp_height = height;
+                vp_width = w, vp_height = h;
             }
 
             template <bool YAxisDown>
@@ -178,6 +181,12 @@ namespace gpc {
             void Canvas<YAxisDown>::leave_context()
             {
                 EXEC_GL(glUseProgram, 0);
+            }
+
+            template <bool YAxisDown>
+            void Canvas<YAxisDown>::clear()
+            {
+                EXEC_GL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             }
 
             template <bool YAxisDown>

@@ -12,17 +12,17 @@
 
 using std::cout;
 
-struct Harness {
+struct DisplayDriver {
 
     typedef gpc::gui::gl::Canvas<true>                              canvas_t;
     typedef std::pair<SDL_Window*, SDL_GLContext>                   display_t;
-    typedef gpc::gui::CanvasTestSuite<canvas_t, display_t, Harness> TestSuite;
+    typedef gpc::gui::CanvasTestSuite<canvas_t, display_t, DisplayDriver> TestSuite;
     typedef TestSuite::init_fn_t                                    init_fn_t;
     typedef TestSuite::cleanup_fn_t                                 cleanup_fn_t;
     typedef TestSuite::draw_fn_t                                    draw_fn_t;
     typedef TestSuite::context_t                                    context_t;
 
-    Harness(): window(nullptr), gl_ctx(0), canvas(nullptr) {}
+    DisplayDriver(): window(nullptr), gl_ctx(0), canvas(nullptr) {}
 
     void init() 
     {
@@ -35,12 +35,12 @@ struct Harness {
         if (window) throw std::runtime_error("This test harness can only open one window/display at a time.");
         assert(gl_ctx == 0);
 
-        Uint32 flags = SDL_WINDOW_OPENGL;
+        Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
         if (w == 0 && h == 0) {
             w = main_display_bounds.w, h = main_display_bounds.h;
             flags |= SDL_WINDOW_HIDDEN | SDL_WINDOW_BORDERLESS;
         }
-        window = SDL_CreateWindow("GPC GUI OpenGL Canvas test window", 0, 0, w, h, flags);
+        window = SDL_CreateWindow("GPC GUI OpenGL Canvas test window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
         gl_ctx = SDL_GL_CreateContext(window);
         glewInit();
         cout << "OpenGL Version " << glGetString(GL_VERSION) << "\n";
@@ -49,18 +49,21 @@ struct Harness {
         int wr, hr;
         SDL_GetWindowSize(window, &wr, &hr);
         assert(wr == w && hr == h); // TODO: return the actual dimension to have test suite check?
-
-        canvas_t *canvas = new canvas_t();
+        
+        assert(!canvas);
+        canvas = new canvas_t();
         display_t disp = std::make_pair(window, gl_ctx);
+        canvas->init();
+        canvas->define_viewport(0, 0, wr, hr);
 
         if (init_fn) init_fn(disp, canvas);
 
-        draw_fn(disp, canvas);
+        render_content(disp, canvas, draw_fn);
 
         return std::make_pair(disp, canvas);
     }
 
-    void destroy_window(display_t disp, cleanup_fn_t cleanup_fn) 
+    void destroy_window(display_t disp, cleanup_fn_t cleanup_fn = nullptr) 
     {
         assert(canvas);
 
@@ -93,8 +96,13 @@ struct Harness {
                 {
                 case SDL_WINDOWEVENT:
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                        //test_suite.update_canvas_size(event.window.data1, event.window.data2);
-                        // TODO: adapt to window dimensions adaptToWindowDimensions(event.window.data1, event.window.data2);
+                        assert(canvas);
+                        canvas->define_viewport(0, 0, event.window.data1, event.window.data2);
+                        canvas->clear();
+                        canvas->prepare_context();
+                        draw_fn(display, canvas);
+                        canvas->leave_context();
+                        std::cout << "redrawn after resize" << std::endl;
                     }
                     else if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
                         render_content(display, canvas, draw_fn);
@@ -117,6 +125,7 @@ struct Harness {
 
     void render_content(display_t display, canvas_t *canvas, draw_fn_t draw_fn)
     {
+        assert(SDL_GL_GetCurrentContext() == gl_ctx);
         canvas->prepare_context();
         draw_fn(display, canvas);
         SDL_GL_SwapWindow(display.first);
@@ -135,16 +144,10 @@ int main(int argc, char *argv[])
 {
     try {
 
-        //int width = 640, height = 480;
-
         SDL_Init(SDL_INIT_VIDEO);
         IMG_Init(IMG_INIT_PNG);
 
-        Harness::TestSuite test_suite;
-
-        //auto adaptToWindowDimensions = [&](unsigned int width, unsigned int height) {
-        //    canvas.define_viewport(0, 0, width, height);
-        //};
+        DisplayDriver::TestSuite test_suite;
 
         test_suite.run_all_tests();
 
