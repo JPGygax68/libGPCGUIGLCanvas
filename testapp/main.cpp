@@ -78,7 +78,7 @@ struct Harness {
         window = 0;
     }
 
-    void present_window(display_t display, draw_fn_t draw_fn)
+    void present_window(display_t display, canvas_t *canvas, draw_fn_t draw_fn)
     {
         assert(display.first == window);
         SDL_ShowWindow(display.first);
