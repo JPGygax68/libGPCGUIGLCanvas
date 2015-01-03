@@ -31,13 +31,13 @@ find_package(GPCBin2C REQUIRED)
 
 foreach(shader ${SHADER_FILES})
   get_filename_component(name "${shader}" NAME)
-  set(shader_file "${GENERATED}/${name}.h")
+  set(shader_header "${GENERATED}/${name}.h")
   add_custom_command(
-    OUTPUT ${shader_file}
+    OUTPUT ${shader_header}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${shader}
-    COMMAND GPCBin2C --input=${CMAKE_CURRENT_SOURCE_DIR}/${shader} --output=${shader_file}
+    COMMAND GPCBin2C --input=${CMAKE_CURRENT_SOURCE_DIR}/${shader} --output=${shader_header}
   )
-  target_sources(libGPCGUIGLCanvas PUBLIC ${shader_file})
+  target_sources(libGPCGUIGLCanvas PUBLIC ${shader_header})
 endforeach()
 
 #--------------------------------------

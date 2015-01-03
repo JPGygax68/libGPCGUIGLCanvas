@@ -8,9 +8,11 @@
 #include <gpc/gl/wrappers.hpp>
 #include <gpc/gui/gl/canvas.hpp>
 
-#include <gpc/gui/canvas_testsuite.hpp>
+#include <gpc/gui/canvas/test_image_gen.hpp>
 
 using std::cout;
+
+#ifdef NOT_DEFINED
 
 struct DisplayDriver {
 
@@ -140,6 +142,11 @@ private:
     canvas_t            *canvas;
 };
 
+#endif
+
+static const int IMAGE_WIDTH  = 1024;
+static const int IMAGE_HEIGHT = 768;
+
 int main(int argc, char *argv[])
 {
     try {
@@ -147,9 +154,23 @@ int main(int argc, char *argv[])
         SDL_Init(SDL_INIT_VIDEO);
         IMG_Init(IMG_INIT_PNG);
 
-        DisplayDriver::TestSuite test_suite;
+        typedef gpc::gui::gl::Canvas<true> Canvas;
 
-        test_suite.run_all_tests();
+        gpc::gui::canvas::TestImageGenerator<Canvas> test_image_gen;
+
+        auto window = [&]() -> std::pair<SDL_Window*, SDL_GLContext> 
+        {
+            Uint32 flags = SDL_WINDOW_OPENGL;
+            int w = IMAGE_WIDTH, h = IMAGE_HEIGHT;
+            SDL_Window *window = SDL_CreateWindow("GPC GUI OpenGL Canvas Test Image Generator", 
+                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
+            SDL_GLContext gl_ctx = SDL_GL_CreateContext(window);
+            glewInit();
+
+            return { window, gl_ctx };
+        }();
+        
+        //test_suite.run_all_tests();
 
         return 0;
     }

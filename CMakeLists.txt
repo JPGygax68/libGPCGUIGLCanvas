@@ -10,8 +10,12 @@ set(VERSION_PATCH 1)
 
 add_subdirectory(thirdparty/GLUtils)
 add_subdirectory(thirdparty/libGPCGUICanvas/lib)
-add_subdirectory(thirdparty/libGPCGUICanvas/testsuite)
+#add_subdirectory(thirdparty/libGPCGUICanvas/testsuite)
+add_subdirectory(thirdparty/libGPCGUICanvas/testimage)
 
 add_subdirectory(lib)
 
+# TODO: the following produces a (non-fatal) error complaining about the unavailability
+# of a header file called "vertex.glsl.h", which is part of the dependency target 
+# libGPCGUIGLCanvas but is a generated file.
 add_subdirectory(testapp)
