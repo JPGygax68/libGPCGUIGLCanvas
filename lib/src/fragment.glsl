@@ -39,8 +39,8 @@ void main() {
         int row = y_max - int(texel_position.y) - 1;
         #endif
 
-        float value = texelFetch(font_pixels, glyph_base + row * w + col);
+        float alpha = texelFetch(font_pixels, glyph_base + row * w + col);
 
-        fragment_color = vec4(color.rgb, value);
+        fragment_color = vec4(color.rgb, alpha);
     }
 }
