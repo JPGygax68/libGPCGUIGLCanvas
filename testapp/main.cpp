@@ -144,8 +144,39 @@ private:
 
 #endif
 
-static const int IMAGE_WIDTH  = 1024;
-static const int IMAGE_HEIGHT = 768;
+static const int IMAGE_WIDTH  = 1280;
+static const int IMAGE_HEIGHT = 1024;
+
+namespace {
+
+    void present_window(SDL_Window *window)
+    {
+        SDL_ShowWindow(window);
+
+        bool running = true;
+        SDL_Event event;
+        do {
+            if (SDL_WaitEvent(&event)) {
+                switch (event.type)
+                {
+                case SDL_KEYUP:
+                    if (event.key.state == SDL_RELEASED && event.key.keysym.sym == SDLK_ESCAPE) {
+                        running = false;
+                    }
+                    break;
+                case SDL_QUIT:
+                    //SDL_Quit();
+                    running = false;
+                    return;
+                }
+            }
+        }
+        while (running);
+
+        SDL_DestroyWindow(window);
+    }
+
+} // unnamed ns
 
 int main(int argc, char *argv[])
 {
@@ -154,23 +185,30 @@ int main(int argc, char *argv[])
         SDL_Init(SDL_INIT_VIDEO);
         IMG_Init(IMG_INIT_PNG);
 
-        typedef gpc::gui::gl::Canvas<true> Canvas;
+        typedef gpc::gui::gl::Canvas<true> canvas_t;
+        typedef gpc::gui::canvas::TestImageGenerator<canvas_t> generator_t;
 
-        gpc::gui::canvas::TestImageGenerator<Canvas> test_image_gen;
+        generator_t gen;
 
-        auto window = [&]() -> std::pair<SDL_Window*, SDL_GLContext> 
+        // Create a GL canvas
+        SDL_Window *window;
+        SDL_GLContext gl_ctx;
+        std::unique_ptr<canvas_t> canvas;
         {
             Uint32 flags = SDL_WINDOW_OPENGL;
-            int w = IMAGE_WIDTH, h = IMAGE_HEIGHT;
-            SDL_Window *window = SDL_CreateWindow("GPC GUI OpenGL Canvas Test Image Generator", 
-                SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
-            SDL_GLContext gl_ctx = SDL_GL_CreateContext(window);
+            int w = generator_t::WIDTH, h = generator_t::HEIGHT;
+            window = SDL_CreateWindow("GPC GUI OpenGL Canvas Test Image Generator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
+            gl_ctx = SDL_GL_CreateContext(window);
             glewInit();
-
-            return { window, gl_ctx };
-        }();
+            canvas.reset(new canvas_t());
+        }
         
-        //test_suite.run_all_tests();
+        // Generate the test image
+        auto img = gen.generate(canvas.get());
+
+        SDL_GL_SwapWindow(window);
+
+        present_window(window);
 
         return 0;
     }

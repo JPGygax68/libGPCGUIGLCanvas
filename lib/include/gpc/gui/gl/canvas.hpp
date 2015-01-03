@@ -28,7 +28,13 @@ namespace gpc {
             class Canvas {
             public:
 
-                struct native_color_t { GLfloat components[4]; };
+                struct native_color_t { 
+                    GLclampf components[4]; 
+                    GLclampf r() const { return components[0]; }
+                    GLclampf g() const { return components[1]; }
+                    GLclampf b() const { return components[2]; }
+                    GLclampf a() const { return components[3]; }
+                };
 
                 typedef GLuint image_handle_t;
 
@@ -47,7 +53,7 @@ namespace gpc {
 
                 void define_viewport(int x, int y, int width, int height);
 
-                void clear();
+                void clear(const native_color_t &color);
 
                 auto register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t;
 
@@ -184,8 +190,9 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::clear()
+            void Canvas<YAxisDown>::clear(const native_color_t &color)
             {
+                EXEC_GL(glClearColor, color.r(), color.g(), color.b(), color.a());
                 EXEC_GL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             }
 
