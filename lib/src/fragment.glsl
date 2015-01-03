@@ -41,6 +41,6 @@ void main() {
 
         float value = texelFetch(font_pixels, glyph_base + row * w + col);
 
-        fragment_color = vec4(value, value, value, 1.0);
+        fragment_color = vec4(color.rgb, value);
     }
 }

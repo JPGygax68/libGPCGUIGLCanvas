@@ -47,7 +47,7 @@ namespace gpc {
                     return native_color_t { { color.r, color.g, color.b, color.a } };
                 }
 
-                void prepare_context();
+                void enter_context();
 
                 void leave_context();
 
@@ -68,6 +68,8 @@ namespace gpc {
                 void cancel_clipping();
 
                 auto register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t;
+
+                void set_text_color(const native_color_t &color);
 
                 template <typename CharT>
                 void draw_text(font_handle_t font, int x, int y, const CharT *text, size_t count);
@@ -113,7 +115,7 @@ namespace gpc {
                 std::vector<GLuint> image_textures;
                 std::vector<ManagedFont> managed_fonts;
                 GLint vp_width, vp_height;
-
+                native_color_t text_color;
             };
 
             // Method implementations -----------------------------------------
@@ -123,6 +125,7 @@ namespace gpc {
                 vertex_buffer(0), index_buffer(0),
                 vertex_shader(0), fragment_shader(0), program(0)
             {
+                text_color = rgba_to_native({0, 0, 0, 1});
             }
 
             template <bool YAxisDown>
@@ -172,7 +175,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::prepare_context()
+            void Canvas<YAxisDown>::enter_context()
             {
                 // TODO: does all this really belong here, or should there be a one-time init independent of viewport ?
                 EXEC_GL(glViewport, 0, 0, vp_width, vp_height);
@@ -294,6 +297,12 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
+            void Canvas<YAxisDown>::set_text_color(const native_color_t &color)
+            {
+                text_color = color;
+            }
+
+            template <bool YAxisDown>
             template <typename CharT>
             void Canvas<YAxisDown>::draw_text(font_handle_t handle, int x, int y, const CharT *text, size_t count)
             {
@@ -316,6 +325,7 @@ namespace gpc {
                     x -= glyph.cbox.x_min;
                 }
 
+                setUniform("color", 2, text_color.components);
                 setUniform("render_mode", 5, 3);
                 setUniform("font_pixels", 7, 0); // use texture unit 0 to access glyph pixels
 

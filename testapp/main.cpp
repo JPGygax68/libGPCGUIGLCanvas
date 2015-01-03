@@ -201,10 +201,15 @@ int main(int argc, char *argv[])
             gl_ctx = SDL_GL_CreateContext(window);
             glewInit();
             canvas.reset(new canvas_t());
+            canvas->init();
+            canvas->define_viewport(0, 0, w, h);
+            gen.init(canvas.get());
         }
         
         // Generate the test image
-        auto img = gen.generate(canvas.get());
+        canvas->enter_context();
+        auto img = gen.generate();
+        canvas->leave_context();
 
         SDL_GL_SwapWindow(window);
 
