@@ -11,7 +11,7 @@
 #endif
 #include <GL/glew.h>
 
-#include <gpc/gui/canvas.hpp>
+#include <gpc/gui/renderer.hpp>
 #include <gpc/gl/wrappers.hpp>
 #include <gpc/gl/utils.hpp>
 #include <gpc/fonts/RasterizedFont.hpp>
@@ -25,7 +25,7 @@ namespace gpc {
             template <
                 bool YAxisDown
             >
-            class Canvas {
+            class Renderer {
             public:
 
                 struct native_color_t { 
@@ -74,7 +74,7 @@ namespace gpc {
                 template <typename CharT>
                 void draw_text(font_handle_t font, int x, int y, const CharT *text, size_t count);
 
-                Canvas();
+                Renderer();
 
                 void init();
 
@@ -121,7 +121,7 @@ namespace gpc {
             // Method implementations -----------------------------------------
 
             template <bool YAxisDown>
-            Canvas<YAxisDown>::Canvas() :
+            Renderer<YAxisDown>::Renderer() :
                 vertex_buffer(0), index_buffer(0),
                 vertex_shader(0), fragment_shader(0), program(0)
             {
@@ -129,7 +129,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::init()
+            void Renderer<YAxisDown>::init()
             {
                 static std::once_flag flag;
                 std::call_once(flag, []() { glewInit(); });
@@ -169,13 +169,13 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::define_viewport(int x, int y, int w, int h)
+            void Renderer<YAxisDown>::define_viewport(int x, int y, int w, int h)
             {
                 vp_width = w, vp_height = h;
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::enter_context()
+            void Renderer<YAxisDown>::enter_context()
             {
                 // TODO: does all this really belong here, or should there be a one-time init independent of viewport ?
                 EXEC_GL(glViewport, 0, 0, vp_width, vp_height);
@@ -187,20 +187,20 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::leave_context()
+            void Renderer<YAxisDown>::leave_context()
             {
                 EXEC_GL(glUseProgram, 0);
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::clear(const native_color_t &color)
+            void Renderer<YAxisDown>::clear(const native_color_t &color)
             {
                 EXEC_GL(glClearColor, color.r(), color.g(), color.b(), color.a());
                 EXEC_GL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::draw_rect(int x, int y, int w, int h)
+            void Renderer<YAxisDown>::draw_rect(int x, int y, int w, int h)
             {
                 // Prepare the vertices
                 GLint v[4][2];
@@ -222,7 +222,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            auto Canvas<YAxisDown>::register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t
+            auto Renderer<YAxisDown>::register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t
             {
                 auto i = image_textures.size();
                 image_textures.resize(i + 1);
@@ -234,7 +234,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::fill_rect(int x, int y, int w, int h, const native_color_t &color)
+            void Renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const native_color_t &color)
             {
                 gpc::gl::setUniform("color", 2, color.components);
                 gpc::gl::setUniform("render_mode", 5, 1);
@@ -243,13 +243,13 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle_t image)
+            void Renderer<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle_t image)
             {
                 draw_image(x, y, w, h, image, 0, 0);
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle_t image, int offset_x, int offset_y)
+            void Renderer<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle_t image, int offset_x, int offset_y)
             {
                 static const GLfloat black[4] = { 0, 0, 0, 0 };
 
@@ -269,21 +269,21 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::set_clipping_rect(int x, int y, int w, int h)
+            void Renderer<YAxisDown>::set_clipping_rect(int x, int y, int w, int h)
             {
                 EXEC_GL(glScissor, x, YAxisDown ? vp_height - (y + h) : y, w, h);
                 EXEC_GL(glEnable, GL_SCISSOR_TEST);
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::cancel_clipping()
+            void Renderer<YAxisDown>::cancel_clipping()
             {
                 EXEC_GL(glDisable, GL_SCISSOR_TEST);
             }
 
             // TODO: free resources allocated for fonts
             template <bool YAxisDown>
-            auto Canvas<YAxisDown>::register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t
+            auto Renderer<YAxisDown>::register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t
             {
                 font_handle_t handle = managed_fonts.size();
 
@@ -297,14 +297,14 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::set_text_color(const native_color_t &color)
+            void Renderer<YAxisDown>::set_text_color(const native_color_t &color)
             {
                 text_color = color;
             }
 
             template <bool YAxisDown>
             template <typename CharT>
-            void Canvas<YAxisDown>::draw_text(font_handle_t handle, int x, int y, const CharT *text, size_t count)
+            void Renderer<YAxisDown>::draw_text(font_handle_t handle, int x, int y, const CharT *text, size_t count)
             {
                 using gpc::gl::setUniform;
 
@@ -354,7 +354,7 @@ namespace gpc {
             // ManagedFont private class --------------------------------------
 
             template <bool YAxisDown>
-            inline void Canvas<YAxisDown>::ManagedFont::createQuads()
+            inline void Renderer<YAxisDown>::ManagedFont::createQuads()
             {
                 struct Vertex { GLint x, y; };
 
@@ -397,7 +397,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Canvas<YAxisDown>::ManagedFont::storePixels()
+            void Renderer<YAxisDown>::ManagedFont::storePixels()
             {
                 buffer_textures.resize(variants.size());
                 EXEC_GL(glGenBuffers, buffer_textures.size(), &buffer_textures[0]);

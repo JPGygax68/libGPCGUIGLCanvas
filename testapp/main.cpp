@@ -6,9 +6,9 @@
 #include <SDL2/SDL_image.h>
 //#include <SDL2/SDL_opengl.h>
 #include <gpc/gl/wrappers.hpp>
-#include <gpc/gui/gl/canvas.hpp>
+#include <gpc/gui/gl/renderer.hpp>
 
-#include <gpc/gui/canvas/test_image_gen.hpp>
+#include <gpc/gui/test_image_gen.hpp>
 
 using std::cout;
 
@@ -185,31 +185,31 @@ int main(int argc, char *argv[])
         SDL_Init(SDL_INIT_VIDEO);
         IMG_Init(IMG_INIT_PNG);
 
-        typedef gpc::gui::gl::Canvas<true> canvas_t;
-        typedef gpc::gui::canvas::TestImageGenerator<canvas_t> generator_t;
+        typedef gpc::gui::gl::Renderer<true> renderer_t;
+        typedef gpc::gui::TestImageGenerator<renderer_t> generator_t;
 
         generator_t gen;
 
-        // Create a GL canvas
+        // Create a GL renderer
         SDL_Window *window;
         SDL_GLContext gl_ctx;
-        std::unique_ptr<canvas_t> canvas;
+        std::unique_ptr<renderer_t> renderer;
         {
             Uint32 flags = SDL_WINDOW_OPENGL;
             int w = generator_t::WIDTH, h = generator_t::HEIGHT;
-            window = SDL_CreateWindow("GPC GUI OpenGL Canvas Test Image Generator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
+            window = SDL_CreateWindow("GPC GUI OpenGL Test Image Generator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
             gl_ctx = SDL_GL_CreateContext(window);
             glewInit();
-            canvas.reset(new canvas_t());
-            canvas->init();
-            canvas->define_viewport(0, 0, w, h);
-            gen.init(canvas.get());
+            renderer.reset(new renderer_t());
+            renderer->init();
+            renderer->define_viewport(0, 0, w, h);
+            gen.init(renderer.get());
         }
         
         // Generate the test image
-        canvas->enter_context();
+        renderer->enter_context();
         auto img = gen.generate();
-        canvas->leave_context();
+        renderer->leave_context();
 
         SDL_GL_SwapWindow(window);
 

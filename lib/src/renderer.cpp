@@ -1,7 +1,7 @@
 #include <string>
 #include <cassert>
 
-#include <gpc/gui/gl/canvas.hpp>
+#include <gpc/gui/gl/renderer.hpp>
 
 namespace gpc { 
 

@@ -1,13 +1,13 @@
 
 set(SHADER_FILES "src/vertex.glsl" "src/fragment.glsl")
 
-add_library(libGPCGUIGLCanvas STATIC 
-  "src/canvas.cpp"
-  "include/gpc/gui/gl/canvas.hpp"
+add_library(libGPCGUIGLRenderer STATIC 
+  "src/renderer.cpp"
+  "include/gpc/gui/gl/renderer.hpp"
   ${SHADER_FILES}
 )
 
-target_include_directories(libGPCGUIGLCanvas BEFORE
+target_include_directories(libGPCGUIGLRenderer BEFORE
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -22,7 +22,7 @@ source_group("Shader files" FILES ${SHADER_FILES})
 # TODO: make this into a CMake module
 
 set(GENERATED "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_include_directories(libGPCGUIGLCanvas PUBLIC ${GENERATED})
+target_include_directories(libGPCGUIGLRenderer PUBLIC ${GENERATED})
 
 # Find the GPC Bin2C utility
 find_package(GPCBin2C REQUIRED)
@@ -37,28 +37,28 @@ foreach(shader ${SHADER_FILES})
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${shader}
     COMMAND GPCBin2C --input=${CMAKE_CURRENT_SOURCE_DIR}/${shader} --output=${shader_header}
   )
-  target_sources(libGPCGUIGLCanvas PUBLIC ${shader_header})
+  target_sources(libGPCGUIGLRenderer PUBLIC ${shader_header})
 endforeach()
 
 #--------------------------------------
 # Libraries
 #
 
-target_link_libraries(libGPCGUIGLCanvas PUBLIC libGPCGUICanvas)
+target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGUICanvas)
 
 find_package(libGPCGLWrappers REQUIRED)
-target_link_libraries(libGPCGUIGLCanvas PRIVATE libGPCGLWrappers)
+target_link_libraries(libGPCGUIGLRenderer PRIVATE libGPCGLWrappers)
 
 #find_package(libGPCGLUtils REQUIRED)
-target_link_libraries(libGPCGUIGLCanvas PUBLIC libGPCGLUtils)
+target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGLUtils)
 
 find_package(GLEW REQUIRED)
-target_link_libraries(libGPCGUIGLCanvas PRIVATE ${GLEW_LIBRARIES})
+target_link_libraries(libGPCGUIGLRenderer PRIVATE ${GLEW_LIBRARIES})
 
 # GPC Fonts (we need the Rasterized Font module)
 
 find_package(libGPCFonts REQUIRED)
-target_link_libraries(libGPCGUIGLCanvas PUBLIC libGPCFonts)
+target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCFonts)
 
 # Cereal
 

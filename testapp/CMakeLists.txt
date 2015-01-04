@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 add_executable(TestApp main.cpp)
 
-target_link_libraries(TestApp PRIVATE libGPCGUIGLCanvas)
+target_link_libraries(TestApp PRIVATE libGPCGUIGLRenderer)
 
 # We need SDL2
 
@@ -56,4 +56,4 @@ target_link_libraries(TestApp PRIVATE libGPCFonts)
 
 # GPC GUI Canvas Test Image module
 
-target_link_libraries(TestApp PRIVATE libGPCGUICanvasTestImage)
+target_link_libraries(TestApp PRIVATE libGPCGUITestImage)
