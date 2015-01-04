@@ -72,7 +72,7 @@ namespace gpc {
                 void set_text_color(const native_color_t &color);
 
                 template <typename CharT>
-                void draw_text(font_handle_t font, int x, int y, const CharT *text, size_t count);
+                void render_text(font_handle_t font, int x, int y, const CharT *text, size_t count);
 
                 Renderer();
 
@@ -304,7 +304,7 @@ namespace gpc {
 
             template <bool YAxisDown>
             template <typename CharT>
-            void Renderer<YAxisDown>::draw_text(font_handle_t handle, int x, int y, const CharT *text, size_t count)
+            void Renderer<YAxisDown>::render_text(font_handle_t handle, int x, int y, const CharT *text, size_t count)
             {
                 using gpc::gl::setUniform;
 
