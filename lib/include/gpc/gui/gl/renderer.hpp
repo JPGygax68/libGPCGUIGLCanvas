@@ -20,13 +20,23 @@ namespace gpc {
 
     namespace gui {
 
+        // TODO: is a dedicated namespace really necessary ?
+
         namespace gl {
 
+            /** This templated class implements a yet to be defined compile-time interface (concept)
+                that would probably best be called something like "PixelGridFittingRenderer" and 
+                which is a specialization of "Renderer", both of which would belong to the gpc::gui
+                namespace.
+             */
             template <
                 bool YAxisDown
             >
             class Renderer {
             public:
+
+                typedef int offset_t;
+                typedef int length_t;
 
                 struct native_color_t { 
                     GLclampf components[4]; 
