@@ -38,6 +38,12 @@ namespace gpc {
                 typedef int offset_t;
                 typedef int length_t;
 
+                // Text bounding box
+                struct text_bbox_t {
+                    int x_min, x_max;   // A negative x_min represents extent before origin of first glyph
+                    int y_min, y_max;   // "min" is the descent and (almost?) always negative, "max" is ascent
+                };
+
                 struct native_color_t { 
                     GLclampf components[4]; 
                     GLclampf r() const { return components[0]; }
@@ -48,7 +54,11 @@ namespace gpc {
 
                 typedef GLuint image_handle_t;
 
-                typedef GLuint font_handle_t;
+                typedef GLint font_handle_t;
+
+                static const font_handle_t INVALID_FONT_HANDLE = -1;
+                    
+                Renderer();
 
                 auto rgb_to_native(const RGBFloat &color) -> native_color_t {
                     return native_color_t { { color.r, color.g, color.b, 1 } };
@@ -81,10 +91,9 @@ namespace gpc {
 
                 void set_text_color(const native_color_t &color);
 
-                template <typename CharT>
-                void render_text(font_handle_t font, int x, int y, const CharT *text, size_t count);
+                auto get_text_extents(font_handle_t font, const char32_t *text, size_t count) -> text_bbox_t;
 
-                Renderer();
+                void render_text(font_handle_t font, int x, int y, const char32_t *text, size_t count);
 
                 void init();
 
@@ -295,6 +304,7 @@ namespace gpc {
             template <bool YAxisDown>
             auto Renderer<YAxisDown>::register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t
             {
+                // TODO: 0 is a valid handle - is this ok, or should we increment the value by 1 to make it guaranteed non-zero ?
                 font_handle_t handle = managed_fonts.size();
 
                 managed_fonts.emplace_back(ManagedFont(rfont));
@@ -313,8 +323,35 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            template <typename CharT>
-            void Renderer<YAxisDown>::render_text(font_handle_t handle, int x, int y, const CharT *text, size_t count)
+            auto Renderer<YAxisDown>::get_text_extents(font_handle_t font_, const char32_t *text, size_t count) 
+                -> text_bbox_t
+            {
+                // TODO: the implementation should be inherited from (or forwarded to) a generic routine
+
+                offset_t x_min = 0, x_max = 0, y_min = 0, y_max = 0;
+                if (count > 0) {
+                    ManagedFont &font = managed_fonts[font_];
+                    // TODO: support multiple variants ?
+                    auto &var = font.variants[0];
+                    auto *glyph = &var.glyphs[ font.findGlyph(*text) ];
+                    x_min = glyph->cbox.x_min;
+                    int i = 0;
+                    offset_t x = 0;
+                    do {
+                        auto &cbox = glyph->cbox;
+                        if (cbox.y_min < y_min) y_min = cbox.y_min;
+                        if (cbox.y_max > y_max) y_max = cbox.y_max;
+                        x += glyph->cbox.adv_x;
+                    }
+                    while (++i < count);
+                    x_max = x + glyph->cbox.x_max;
+                }
+
+                return { x_min, x_max, y_min, y_max };
+            }
+
+            template <bool YAxisDown>
+            void Renderer<YAxisDown>::render_text(font_handle_t handle, int x, int y, const char32_t *text, size_t count)
             {
                 using gpc::gl::setUniform;
 
