@@ -42,6 +42,8 @@ namespace gpc {
                 struct text_bbox_t {
                     int x_min, x_max;   // A negative x_min represents extent before origin of first glyph
                     int y_min, y_max;   // "min" is the descent and (almost?) always negative, "max" is ascent
+                    int width() const { return x_max - x_min; }
+                    int height() const { return y_max - y_min; }
                 };
 
                 struct native_color_t { 
@@ -337,13 +339,14 @@ namespace gpc {
                     x_min = glyph->cbox.x_min;
                     int i = 0;
                     offset_t x = 0;
-                    do {
+                    while (true) {
+                        glyph = &var.glyphs[font.findGlyph(text[i])];
                         auto &cbox = glyph->cbox;
-                        if (cbox.y_min < y_min) y_min = cbox.y_min;
-                        if (cbox.y_max > y_max) y_max = cbox.y_max;
+                        y_min = min(y_min, glyph->cbox.y_min);
+                        y_max = max(y_max, glyph->cbox.y_max);
+                        if (++i == count) break;
                         x += glyph->cbox.adv_x;
                     }
-                    while (++i < count);
                     x_max = x + glyph->cbox.x_max;
                 }
 
