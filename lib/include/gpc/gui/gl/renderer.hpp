@@ -38,14 +38,6 @@ namespace gpc {
                 typedef int offset_t;
                 typedef int length_t;
 
-                // Text bounding box
-                struct text_bbox_t {
-                    int x_min, x_max;   // A negative x_min represents extent before origin of first glyph
-                    int y_min, y_max;   // "min" is the descent and (almost?) always negative, "max" is ascent
-                    int width() const { return x_max - x_min; }
-                    int height() const { return y_max - y_min; }
-                };
-
                 struct native_color_t { 
                     GLclampf components[4]; 
                     GLclampf r() const { return components[0]; }
@@ -91,9 +83,12 @@ namespace gpc {
 
                 auto register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t;
 
+                // TODO:
+                void releaseFont(font_handle_t reg_font);
+
                 void set_text_color(const native_color_t &color);
 
-                auto get_text_extents(font_handle_t font, const char32_t *text, size_t count) -> text_bbox_t;
+                // auto get_text_extents(font_handle_t font, const char32_t *text, size_t count) -> text_bbox_t;
 
                 void render_text(font_handle_t font, int x, int y, const char32_t *text, size_t count);
 
@@ -119,7 +114,7 @@ namespace gpc {
                     };
                 }
 
-                struct ManagedFont: public gpc::fonts::RasterizedFont {
+                struct ManagedFont: gpc::fonts::RasterizedFont {
                     ManagedFont(const gpc::fonts::RasterizedFont &from): gpc::fonts::RasterizedFont(from) {}
                     std::vector<GLuint> buffer_textures;
                     std::vector<GLuint> textures; // one 1D texture per variant
@@ -322,35 +317,6 @@ namespace gpc {
             void Renderer<YAxisDown>::set_text_color(const native_color_t &color)
             {
                 text_color = color;
-            }
-
-            template <bool YAxisDown>
-            auto Renderer<YAxisDown>::get_text_extents(font_handle_t font_, const char32_t *text, size_t count) 
-                -> text_bbox_t
-            {
-                // TODO: the implementation should be inherited from (or forwarded to) a generic routine
-
-                offset_t x_min = 0, x_max = 0, y_min = 0, y_max = 0;
-                if (count > 0) {
-                    ManagedFont &font = managed_fonts[font_];
-                    // TODO: support multiple variants ?
-                    auto &var = font.variants[0];
-                    auto *glyph = &var.glyphs[ font.findGlyph(*text) ];
-                    x_min = glyph->cbox.x_min;
-                    int i = 0;
-                    offset_t x = 0;
-                    while (true) {
-                        glyph = &var.glyphs[font.findGlyph(text[i])];
-                        auto &cbox = glyph->cbox;
-                        y_min = min(y_min, glyph->cbox.y_min);
-                        y_max = max(y_max, glyph->cbox.y_max);
-                        if (++i == count) break;
-                        x += glyph->cbox.adv_x;
-                    }
-                    x_max = x + glyph->cbox.x_max;
-                }
-
-                return { x_min, x_max, y_min, y_max };
             }
 
             template <bool YAxisDown>
