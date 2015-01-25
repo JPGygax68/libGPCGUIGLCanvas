@@ -48,10 +48,8 @@ namespace gpc {
 
                 typedef GLuint image_handle_t;
 
-                typedef GLint font_handle_t;
+                typedef GLint reg_font_t;
 
-                static const font_handle_t INVALID_FONT_HANDLE = -1;
-                    
                 Renderer();
 
                 auto rgb_to_native(const RGBFloat &color) -> native_color_t {
@@ -81,16 +79,15 @@ namespace gpc {
 
                 void cancel_clipping();
 
-                auto register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t;
+                auto register_font(const gpc::fonts::RasterizedFont &rfont) -> reg_font_t;
 
-                // TODO:
-                void releaseFont(font_handle_t reg_font);
+                void release_font(reg_font_t reg_font);
 
                 void set_text_color(const native_color_t &color);
 
-                // auto get_text_extents(font_handle_t font, const char32_t *text, size_t count) -> text_bbox_t;
+                // auto get_text_extents(reg_font_t font, const char32_t *text, size_t count) -> text_bbox_t;
 
-                void render_text(font_handle_t font, int x, int y, const char32_t *text, size_t count);
+                void render_text(reg_font_t font, int x, int y, const char32_t *text, size_t count);
 
                 void init();
 
@@ -299,10 +296,10 @@ namespace gpc {
 
             // TODO: free resources allocated for fonts
             template <bool YAxisDown>
-            auto Renderer<YAxisDown>::register_font(const gpc::fonts::RasterizedFont &rfont) -> font_handle_t
+            auto Renderer<YAxisDown>::register_font(const gpc::fonts::RasterizedFont &rfont) -> reg_font_t
             {
-                // TODO: 0 is a valid handle - is this ok, or should we increment the value by 1 to make it guaranteed non-zero ?
-                font_handle_t handle = managed_fonts.size();
+                // TODO: re-use discarded slots
+                reg_font_t index = managed_fonts.size();
 
                 managed_fonts.emplace_back(ManagedFont(rfont));
                 auto &mfont = managed_fonts.back();
@@ -310,7 +307,14 @@ namespace gpc {
                 mfont.storePixels();
                 mfont.createQuads();
 
-                return handle;
+                return index + 1;
+            }
+
+            template <bool YAxisDown>
+            void Renderer<YAxisDown>::release_font(reg_font_t handle)
+            {
+                auto &font = managed_fonts[handle - 1];
+
             }
 
             template <bool YAxisDown>
@@ -320,11 +324,11 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::render_text(font_handle_t handle, int x, int y, const char32_t *text, size_t count)
+            void Renderer<YAxisDown>::render_text(reg_font_t handle, int x, int y, const char32_t *text, size_t count)
             {
                 using gpc::gl::setUniform;
 
-                const auto &mfont = managed_fonts[handle];
+                const auto &mfont = managed_fonts[handle - 1];
 
                 auto var_index = 0; // TODO: support multiple variants
                 const auto &variant = mfont.variants[var_index]; 
