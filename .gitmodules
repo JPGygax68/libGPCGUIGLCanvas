@@ -10,3 +10,6 @@
 [submodule "thirdparty/libGPCGUICanvas"]
 	path = thirdparty/libGPCGUICanvas
 	url = https://github.com/JPGygax68/libGPCGUICanvas.git
+[submodule "thirdparty/libGPCGUIRenderer"]
+	path = thirdparty/libGPCGUIRenderer
+	url = https://github.com/JPGygax68/libGPCGUIRenderer.git
