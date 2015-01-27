@@ -197,6 +197,7 @@ namespace gpc {
                 EXEC_GL(glUseProgram, program);
                 gpc::gl::setUniform("vp_width", 0, vp_width);
                 gpc::gl::setUniform("vp_height", 1, vp_height);
+                EXEC_GL(glDisable, GL_DEPTH_TEST);
             }
 
             template <bool YAxisDown>
