@@ -11,6 +11,7 @@ set(VERSION_PATCH 1)
 add_subdirectory(thirdparty/GLUtils)
 add_subdirectory(thirdparty/libGPCGUICanvas/lib) # TODO: correct to use subdirectory instead of package directory ?
 add_subdirectory(thirdparty/libGPCGUICanvas/testimage)
+add_subdirectory(thirdparty/libGPCGUIRenderer/lib)
 
 add_subdirectory(lib)
 
