@@ -53,10 +53,10 @@ namespace gpc {
                 Renderer();
 
                 // TODO: define color conversions as instance-less ("static") ? or even constexpr ?
-                auto rgb_to_native(const RGBFloat &color) -> native_color_t {
+                static auto rgb_to_native(const RGBFloat &color) -> native_color_t {
                     return native_color_t { { color.r, color.g, color.b, 1 } };
                 }
-                auto rgba_to_native(const RGBAFloat &color) -> native_color_t {
+                static auto rgba_to_native(const RGBAFloat &color) -> native_color_t {
                     return native_color_t { { color.r, color.g, color.b, color.a } };
                 }
 
