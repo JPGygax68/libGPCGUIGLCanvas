@@ -52,11 +52,13 @@ target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGLWrappers)
 #find_package(libGPCGLUtils REQUIRED)
 target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGLUtils)
 
+if (0)
 find_package(OpenGL REQUIRED)
 target_link_libraries(libGPCGUIGLRenderer PUBLIC ${OPENGL_LIBRARIES})
 
 find_package(GLEW REQUIRED)
 target_link_libraries(libGPCGUIGLRenderer PUBLIC ${GLEW_LIBRARIES})
+endif()
 
 # GPC Fonts (we need the Rasterized Font module)
 

@@ -6,10 +6,12 @@
 #include <mutex>
 #include <string>
 #include <array>
+#ifdef FORCE_GLEW
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 #include <GL/glew.h>
+#endif
 
 #include <gpc/gui/renderer.hpp>
 #include <gpc/gl/wrappers.hpp>
@@ -145,9 +147,12 @@ namespace gpc {
             template <bool YAxisDown>
             void Renderer<YAxisDown>::init()
             {
+                // User code is responsible for creating and/or selecting the proper GL context when calling init()
+                // TODO: somehow (optionally) make use of glbinding's context management facilities?
+                #ifdef NOT_DEFINED
                 static std::once_flag flag;
                 std::call_once(flag, []() { glewInit(); });
-                //glewInit();
+                #endif
 
                 // Upload and compile our shader program
                 {
@@ -434,7 +439,8 @@ namespace gpc {
                     auto &variant = variants[i_var];
 
                     // Load the pixels into a texture buffer object
-                    EXEC_GL(glBufferStorage, GL_TEXTURE_BUFFER, variant.pixels.size(), &variant.pixels[0], 0); // TODO: really no flags ?
+                    // TODO: really no flags ?
+                    EXEC_GL(glBufferStorage, GL_TEXTURE_BUFFER, variant.pixels.size(), &variant.pixels[0], (MapBufferUsageMask)0);
 
                     // Bind the texture buffer object as a.. texture
                     EXEC_GL(glBindTexture, GL_TEXTURE_BUFFER, textures[i_var]);

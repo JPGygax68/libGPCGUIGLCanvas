@@ -1,8 +1,3 @@
-#include <string>
-#include <cassert>
-
-#include <gpc/gui/gl/renderer.hpp>
-
 namespace gpc { 
 
     namespace gui { 
