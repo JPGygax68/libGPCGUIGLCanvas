@@ -13,6 +13,17 @@ target_include_directories(libGPCGUIGLRenderer BEFORE
     $<INSTALL_INTERFACE:include>
 )
 
+# Force static runtime libraries
+
+FOREACH(flag
+  CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO
+  CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_DEBUG_INIT
+  CMAKE_CXX_FLAGS_RELEASE  CMAKE_CXX_FLAGS_RELWITHDEBINFO
+  CMAKE_CXX_FLAGS_DEBUG  CMAKE_CXX_FLAGS_DEBUG_INIT)
+  STRING(REPLACE "/MD"  "/MT" "${flag}" "${${flag}}")
+  SET("${flag}" "${${flag}} /EHsc")
+ENDFOREACH()
+ 
 #--------------------------------------
 # Embed shader files
 #
@@ -52,6 +63,8 @@ target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGLWrappers)
 #find_package(libGPCGLUtils REQUIRED)
 target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGLUtils)
 
+# All our calls to OpenGL are from within inlined code (header files),
+# so we don't link in any OpenGL bindings
 if (0)
 find_package(OpenGL REQUIRED)
 target_link_libraries(libGPCGUIGLRenderer PUBLIC ${OPENGL_LIBRARIES})
