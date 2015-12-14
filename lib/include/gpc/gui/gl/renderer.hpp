@@ -16,7 +16,7 @@
 #include <gpc/gui/renderer.hpp>
 #include <gpc/gl/wrappers.hpp>
 #include <gpc/gl/utils.hpp>
-#include <gpc/fonts/RasterizedFont.hpp>
+#include <gpc/fonts/rasterized_font.hpp>
 
 namespace gpc {
 
@@ -82,7 +82,7 @@ namespace gpc {
 
                 void cancel_clipping();
 
-                auto register_font(const gpc::fonts::RasterizedFont &rfont) -> reg_font_t;
+                auto register_font(const gpc::fonts::rasterized_font &rfont) -> reg_font_t;
 
                 void release_font(reg_font_t reg_font);
 
@@ -114,8 +114,8 @@ namespace gpc {
                     };
                 }
 
-                struct ManagedFont: gpc::fonts::RasterizedFont {
-                    ManagedFont(const gpc::fonts::RasterizedFont &from): gpc::fonts::RasterizedFont(from) {}
+                struct managed_font: gpc::fonts::rasterized_font {
+                    managed_font(const gpc::fonts::rasterized_font &from): gpc::fonts::rasterized_font(from) {}
                     std::vector<GLuint> buffer_textures;
                     std::vector<GLuint> textures; // one 1D texture per variant
                     GLuint vertex_buffer;
@@ -170,53 +170,54 @@ namespace gpc {
                     if (!log.empty()) std::cerr << "Fragment shader compilation log:" << std::endl << log << std::endl;
                 }
                 assert(program == 0);
-                program = CALL_GL(glCreateProgram);
-                EXEC_GL(glAttachShader, program, vertex_shader);
-                EXEC_GL(glAttachShader, program, fragment_shader);
-                EXEC_GL(glLinkProgram, program);
+                program = GL(CreateProgram);
+                GL(AttachShader, program, vertex_shader);
+                GL(AttachShader, program, fragment_shader);
+                GL(LinkProgram, program);
 
                 // Generate a vertex and an index buffer for rectangle vertices
                 assert(vertex_buffer == 0);
-                EXEC_GL(glGenBuffers, 1, &vertex_buffer);
+                GL(GenBuffers, 1, &vertex_buffer);
                 assert(index_buffer == 0);
-                EXEC_GL(glGenBuffers, 1, &index_buffer);
+                GL(GenBuffers, 1, &index_buffer);
 
                 // Initialize the index buffer
                 static GLushort indices[] = { 0, 1, 3, 2 };
-                EXEC_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-                EXEC_GL(glBufferData, GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLushort), indices, GL_STATIC_DRAW);
+                GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+                GL(BufferData, GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLushort), indices, GL_STATIC_DRAW);
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::define_viewport(int x, int y, int w, int h)
             {
                 vp_width = w, vp_height = h;
+                // TODO: why no call to glViewport() ?
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::enter_context()
             {
                 // TODO: does all this really belong here, or should there be a one-time init independent of viewport ?
-                EXEC_GL(glViewport, 0, 0, vp_width, vp_height);
-                EXEC_GL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                EXEC_GL(glEnable, GL_BLEND);
-                EXEC_GL(glUseProgram, program);
+                GL(Viewport, 0, 0, vp_width, vp_height);
+                GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                GL(Enable, GL_BLEND);
+                GL(UseProgram, program);
                 gpc::gl::setUniform("vp_width", 0, vp_width);
                 gpc::gl::setUniform("vp_height", 1, vp_height);
-                EXEC_GL(glDisable, GL_DEPTH_TEST);
+                GL(Disable, GL_DEPTH_TEST);
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::leave_context()
             {
-                EXEC_GL(glUseProgram, 0);
+                GL(UseProgram, 0);
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::clear(const native_color_t &color)
             {
-                EXEC_GL(glClearColor, color.r(), color.g(), color.b(), color.a());
-                EXEC_GL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                GL(ClearColor, color.r(), color.g(), color.b(), color.a());
+                GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             }
 
             template <bool YAxisDown>
@@ -230,14 +231,14 @@ namespace gpc {
                 v[3][0] = x + w, v[3][1] = y;
 
                 // Now send everything to OpenGL
-                EXEC_GL(glEnableClientState, GL_VERTEX_ARRAY);
-                EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, vertex_buffer);
-                EXEC_GL(glBufferData, GL_ARRAY_BUFFER, 4 * 2 * sizeof(GLint), v, GL_STATIC_DRAW);
-                EXEC_GL(glVertexPointer, 2, GL_INT, 2 * sizeof(GLint), nullptr);
-                EXEC_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-                EXEC_GL(glDrawElements, GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, nullptr);
-                EXEC_GL(glDisableClientState, GL_VERTEX_ARRAY);
-                EXEC_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
+                GL(EnableClientState, GL_VERTEX_ARRAY);
+                GL(BindBuffer, GL_ARRAY_BUFFER, vertex_buffer);
+                GL(BufferData, GL_ARRAY_BUFFER, 4 * 2 * sizeof(GLint), v, GL_STATIC_DRAW);
+                GL(VertexPointer, 2, GL_INT, 2 * sizeof(GLint), nullptr);
+                GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+                GL(DrawElements, GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, nullptr);
+                GL(DisableClientState, GL_VERTEX_ARRAY);
+                GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
                 EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, 0);
             }
 
@@ -246,10 +247,10 @@ namespace gpc {
             {
                 auto i = image_textures.size();
                 image_textures.resize(i + 1);
-                EXEC_GL(glGenTextures, 1, &image_textures[i]);
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, image_textures[i]);
-                EXEC_GL(glTexImage2D, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, 0);
+                GL(GenTextures, 1, &image_textures[i]);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, image_textures[i]);
+                GL(TexImage2D, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, 0);
                 return image_textures[i];
             }
 
@@ -279,31 +280,31 @@ namespace gpc {
                 gpc::gl::setUniform("position", 4, position);
                 GLint offset[2] = { offset_x, offset_y };
                 gpc::gl::setUniform("offset", 6, offset);
-                //EXEC_GL(glActiveTexture, GL_TEXTURE0);
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, image);
+                //GL(ActiveTexture, GL_TEXTURE0);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, image);
                 gpc::gl::setUniform("render_mode", 5, 2);
 
                 draw_rect(x, y, w, h);
 
-                EXEC_GL(glBindTexture, GL_TEXTURE_RECTANGLE, 0);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, 0);
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::set_clipping_rect(int x, int y, int w, int h)
             {
-                EXEC_GL(glScissor, x, YAxisDown ? vp_height - (y + h) : y, w, h);
-                EXEC_GL(glEnable, GL_SCISSOR_TEST);
+                GL(Scissor, x, YAxisDown ? vp_height - (y + h) : y, w, h);
+                GL(Enable, GL_SCISSOR_TEST);
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::cancel_clipping()
             {
-                EXEC_GL(glDisable, GL_SCISSOR_TEST);
+                GL(Disable, GL_SCISSOR_TEST);
             }
 
             // TODO: free resources allocated for fonts
             template <bool YAxisDown>
-            auto Renderer<YAxisDown>::register_font(const gpc::fonts::RasterizedFont &rfont) -> reg_font_t
+            auto Renderer<YAxisDown>::register_font(const gpc::fonts::rasterized_font &rfont) -> reg_font_t
             {
                 // TODO: re-use discarded slots
                 reg_font_t index = managed_fonts.size();
@@ -321,7 +322,7 @@ namespace gpc {
             void Renderer<YAxisDown>::release_font(reg_font_t handle)
             {
                 auto &font = managed_fonts[handle - 1];
-
+                // TODO: actual implementation
             }
 
             template <bool YAxisDown>
@@ -340,11 +341,11 @@ namespace gpc {
                 auto var_index = 0; // TODO: support multiple variants
                 const auto &variant = mfont.variants[var_index]; 
 
-                EXEC_GL(glEnableClientState, GL_VERTEX_ARRAY);
-                EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, mfont.vertex_buffer);
-                EXEC_GL(glVertexPointer, 2, GL_INT, 0, static_cast<GLvoid*>(0));
+                GL(EnableClientState, GL_VERTEX_ARRAY);
+                GL(BindBuffer, GL_ARRAY_BUFFER, mfont.vertex_buffer);
+                GL(VertexPointer, 2, GL_INT, 0, static_cast<GLvoid*>(0));
 
-                EXEC_GL(glBindTexture, GL_TEXTURE_BUFFER, mfont.textures[var_index]); // font pixels
+                GL(BindTexture, GL_TEXTURE_BUFFER, mfont.textures[var_index]); // font pixels
 
                 {
                     auto glyph_index = mfont.findGlyph(*text);
@@ -368,20 +369,20 @@ namespace gpc {
                     setUniform("position", 4, position);
 
                     GLint base = 4 * glyph_index;
-                    EXEC_GL(glDrawArrays, GL_QUADS, base, 4);
+                    GL(DrawArrays, GL_QUADS, base, 4);
 
                     x += glyph.cbox.adv_x;
                 }
 
-                EXEC_GL(glBindTexture, GL_TEXTURE_BUFFER, 0);
-                EXEC_GL(glDisableClientState, GL_VERTEX_ARRAY);
-                EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, 0);
+                GL(BindTexture, GL_TEXTURE_BUFFER, 0);
+                GL(DisableClientState, GL_VERTEX_ARRAY);
+                GL(BindBuffer, GL_ARRAY_BUFFER, 0);
             }
 
             // ManagedFont private class --------------------------------------
 
             template <bool YAxisDown>
-            inline void Renderer<YAxisDown>::ManagedFont::createQuads()
+            inline void Renderer<YAxisDown>::managed_font::createQuads()
             {
                 struct Vertex { GLint x, y; };
 
@@ -424,7 +425,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::ManagedFont::storePixels()
+            void Renderer<YAxisDown>::managed_font::storePixels()
             {
                 buffer_textures.resize(variants.size());
                 EXEC_GL(glGenBuffers, buffer_textures.size(), &buffer_textures[0]);

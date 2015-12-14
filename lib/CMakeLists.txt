@@ -57,7 +57,9 @@ endforeach()
 
 target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGUIRenderer)
 
-find_package(libGPCGLWrappers REQUIRED)
+if (NOT TARGET libGPCGLWrappers)
+	find_package(libGPCGLWrappers REQUIRED)
+endif()
 target_link_libraries(libGPCGUIGLRenderer PUBLIC libGPCGLWrappers)
 
 #find_package(libGPCGLUtils REQUIRED)
