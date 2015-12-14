@@ -15,7 +15,8 @@
 
 #include <gpc/gui/renderer.hpp>
 #include <gpc/gl/wrappers.hpp>
-#include <gpc/gl/utils.hpp>
+#include <gpc/gl/uniform.hpp>
+#include <gpc/gl/shader_program.hpp>
 #include <gpc/fonts/rasterized_font.hpp>
 
 namespace gpc {
@@ -129,7 +130,7 @@ namespace gpc {
                 GLuint vertex_shader, fragment_shader;
                 GLuint program;
                 std::vector<GLuint> image_textures;
-                std::vector<ManagedFont> managed_fonts;
+                std::vector<managed_font> managed_fonts;
                 GLint vp_width, vp_height;
                 native_color_t text_color;
             };
@@ -159,7 +160,7 @@ namespace gpc {
                     assert(vertex_shader == 0);
                     vertex_shader = CALL_GL(glCreateShader, GL_VERTEX_SHADER);
                     // TODO: dispense with the error checking and logging in release builds
-                    auto log = gpc::gl::compileShader(vertex_shader, vertex_code(), YAxisDown ? "#define Y_AXIS_DOWN" : "");
+                    auto log = ::gpc::gl::compileShader(vertex_shader, vertex_code(), YAxisDown ? "#define Y_AXIS_DOWN" : "");
                     if (!log.empty()) std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
@@ -191,19 +192,19 @@ namespace gpc {
             void Renderer<YAxisDown>::define_viewport(int x, int y, int w, int h)
             {
                 vp_width = w, vp_height = h;
-                // TODO: why no call to glViewport() ?
+                //GL(Viewport, x, y, w, h);
+
+                GL(UseProgram, program);
+                ::gpc::gl::setUniform("vp_width", 0, w);
+                ::gpc::gl::setUniform("vp_height", 1, h);
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::enter_context()
             {
                 // TODO: does all this really belong here, or should there be a one-time init independent of viewport ?
-                GL(Viewport, 0, 0, vp_width, vp_height);
                 GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 GL(Enable, GL_BLEND);
-                GL(UseProgram, program);
-                gpc::gl::setUniform("vp_width", 0, vp_width);
-                gpc::gl::setUniform("vp_height", 1, vp_height);
                 GL(Disable, GL_DEPTH_TEST);
             }
 
@@ -249,7 +250,7 @@ namespace gpc {
                 image_textures.resize(i + 1);
                 GL(GenTextures, 1, &image_textures[i]);
                 GL(BindTexture, GL_TEXTURE_RECTANGLE, image_textures[i]);
-                GL(TexImage2D, GL_TEXTURE_RECTANGLE, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                GL(TexImage2D, GL_TEXTURE_RECTANGLE, 0, (GLint)GL_RGBA, width, height, 0, (GLenum)GL_RGBA, GL_UNSIGNED_BYTE, pixels);
                 GL(BindTexture, GL_TEXTURE_RECTANGLE, 0);
                 return image_textures[i];
             }
@@ -309,7 +310,7 @@ namespace gpc {
                 // TODO: re-use discarded slots
                 reg_font_t index = managed_fonts.size();
 
-                managed_fonts.emplace_back(ManagedFont(rfont));
+                managed_fonts.emplace_back(managed_font(rfont));
                 auto &mfont = managed_fonts.back();
 
                 mfont.storePixels();
@@ -348,9 +349,9 @@ namespace gpc {
                 GL(BindTexture, GL_TEXTURE_BUFFER, mfont.textures[var_index]); // font pixels
 
                 {
-                    auto glyph_index = mfont.findGlyph(*text);
+                    auto glyph_index = mfont.find_glyph(*text);
                     const auto &glyph = variant.glyphs[glyph_index];
-                    x -= glyph.cbox.x_min;
+                    x -= glyph.cbox.bounds.x_min;
                 }
 
                 setUniform("color", 2, text_color.components);
@@ -359,11 +360,13 @@ namespace gpc {
 
                 for (const auto *p = text; p < (text + count); p++) {
 
-                    auto glyph_index = mfont.findGlyph(*p);
+                    auto glyph_index = mfont.find_glyph(*p);
                     const auto &glyph = variant.glyphs[glyph_index];
 
                     setUniform("glyph_base", 8, glyph.pixel_base);
-                    GLint cbox[4] = { glyph.cbox.x_min, glyph.cbox.x_max, glyph.cbox.y_min, glyph.cbox.y_max };
+                    GLint cbox[4] = { 
+                        glyph.cbox.bounds.x_min, glyph.cbox.bounds.x_max, 
+                        glyph.cbox.bounds.y_min, glyph.cbox.bounds.y_max };
                     setUniform("glyph_cbox", 9, cbox);
                     GLint position[2] = { x, y };
                     setUniform("position", 4, position);
@@ -379,14 +382,14 @@ namespace gpc {
                 GL(BindBuffer, GL_ARRAY_BUFFER, 0);
             }
 
-            // ManagedFont private class --------------------------------------
+            // managed_font private class -------------------------------------
 
             template <bool YAxisDown>
             inline void Renderer<YAxisDown>::managed_font::createQuads()
             {
                 struct Vertex { GLint x, y; };
 
-                EXEC_GL(glGenBuffers, 1, &vertex_buffer);
+                GL(GenBuffers, 1, &vertex_buffer);
 
                 // Compute total number of glyphs in font
                 auto glyph_count = 0U;
@@ -404,52 +407,52 @@ namespace gpc {
                     for (const auto &glyph : variant.glyphs) {
 
                         if (YAxisDown) {
-                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min, -glyph.cbox.y_max });
-                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min, -glyph.cbox.y_min });
-                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max, -glyph.cbox.y_min });
-                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max, -glyph.cbox.y_max });
-                        }
-                        else {
-                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min, glyph.cbox.y_min });
-                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max, glyph.cbox.y_min });
-                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max, glyph.cbox.y_max });
-                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min, glyph.cbox.y_max });
+                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min, -glyph.cbox.bounds.y_max });
+                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min, -glyph.cbox.bounds.y_min });
+                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max, -glyph.cbox.bounds.y_min });
+                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max, -glyph.cbox.bounds.y_max });
+                        }                                                               
+                        else {                                                          
+                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min,  glyph.cbox.bounds.y_min });
+                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max,  glyph.cbox.bounds.y_min });
+                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max,  glyph.cbox.bounds.y_max });
+                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min,  glyph.cbox.bounds.y_max });
                         }
                     }
                 }
 
                 // Upload the vertex array
-                EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, vertex_buffer);
-                EXEC_GL(glBufferData, GL_ARRAY_BUFFER, vertices.size()*sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-                EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, 0); // just in case
+                GL(BindBuffer, GL_ARRAY_BUFFER, vertex_buffer);
+                GL(BufferData, GL_ARRAY_BUFFER, vertices.size()*sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+                GL(BindBuffer, GL_ARRAY_BUFFER, 0); // just in case
             }
 
             template <bool YAxisDown>
             void Renderer<YAxisDown>::managed_font::storePixels()
             {
                 buffer_textures.resize(variants.size());
-                EXEC_GL(glGenBuffers, buffer_textures.size(), &buffer_textures[0]);
+                GL(GenBuffers, buffer_textures.size(), &buffer_textures[0]);
 
                 textures.resize(variants.size());
-                EXEC_GL(glGenTextures, textures.size(), &textures[0]);
+                GL(GenTextures, textures.size(), &textures[0]);
 
                 for (auto i_var = 0U; i_var < variants.size(); i_var++) {
 
-                    EXEC_GL(glBindBuffer, GL_TEXTURE_BUFFER, buffer_textures[i_var]);
+                    GL(BindBuffer, GL_TEXTURE_BUFFER, buffer_textures[i_var]);
 
                     auto &variant = variants[i_var];
 
                     // Load the pixels into a texture buffer object
                     // TODO: really no flags ?
-                    EXEC_GL(glBufferStorage, GL_TEXTURE_BUFFER, variant.pixels.size(), &variant.pixels[0], (MapBufferUsageMask)0);
+                    GL(BufferStorage, GL_TEXTURE_BUFFER, variant.pixels.size(), &variant.pixels[0], (BufferStorageMask)0);
 
                     // Bind the texture buffer object as a.. texture
-                    EXEC_GL(glBindTexture, GL_TEXTURE_BUFFER, textures[i_var]);
-                    EXEC_GL(glTexBuffer, GL_TEXTURE_BUFFER, GL_R8, buffer_textures[i_var]);
+                    GL(BindTexture, GL_TEXTURE_BUFFER, textures[i_var]);
+                    GL(TexBuffer, GL_TEXTURE_BUFFER, GL_R8, buffer_textures[i_var]);
                 }
 
-                EXEC_GL(glBindBuffer, GL_TEXTURE_BUFFER, 0);
-                EXEC_GL(glBindTexture, GL_TEXTURE_BUFFER, 0);
+                GL(BindBuffer, GL_TEXTURE_BUFFER, 0);
+                GL(BindTexture, GL_TEXTURE_BUFFER, 0);
             }
 
         } // ns gl

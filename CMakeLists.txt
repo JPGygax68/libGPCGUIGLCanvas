@@ -19,3 +19,27 @@ add_subdirectory(lib)
 # of a header file called "vertex.glsl.h", which is part of the dependency target 
 # libGPCGUIGLCanvas but is a generated file.
 add_subdirectory(testapp)
+
+#------------------------------------------------
+# INSTALLATION
+#
+
+install(TARGETS libGPCGUIGLRenderer
+	EXPORT libGPCGUIGLRenderer
+	ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+)
+
+# Install the ...config.cmake and ...config-version.cmake files
+install(FILES
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/libGPCGUIGLRenderer-config.cmake"
+  "${PROJECT_BINARY_DIR}/libGPCGUIGLRenderer-config-version.cmake"
+  DESTINATION "${INSTALL_CMAKE_DIR}"
+)
+ 
+ # Install the export set for use with the install-tree
+install(EXPORT libGPCGUIGLRenderer
+	DESTINATION "${INSTALL_CMAKE_DIR}" 
+	EXPORT_LINK_INTERFACE_LIBRARIES
+)
+
+# TODO: install testapp
