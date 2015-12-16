@@ -35,33 +35,44 @@ namespace gpc {
             template <
                 bool YAxisDown
             >
-            class Renderer {
+            class renderer {
             public:
 
-                typedef int offset_t;
-                typedef int length_t;
-
-                struct native_color_t { 
-                    GLclampf components[4]; 
+                struct rgba_floats {
+                    GLclampf components[4];
                     GLclampf r() const { return components[0]; }
                     GLclampf g() const { return components[1]; }
                     GLclampf b() const { return components[2]; }
                     GLclampf a() const { return components[3]; }
                 };
 
-                typedef GLuint image_handle_t;
+                using rasterized_font = gpc::fonts::rasterized_font;
 
-                typedef GLint reg_font_t;
+            public:
 
-                Renderer();
+                // Exported types
 
-                // TODO: define color conversions as instance-less ("static") ? or even constexpr ?
-                static auto rgb_to_native(const RGBFloat &color) -> native_color_t {
-                    return native_color_t { { color.r, color.g, color.b, 1 } };
+                using offset        = int;
+                using length        = int;
+                using image_handle  = GLuint;
+                using font_handle   = GLint;
+                using native_color  = rgba_floats;
+
+                // Class methods
+
+                static constexpr auto rgb_to_native(const rgb &color) -> rgba_floats
+                {
+                    return{ color.r, color.g, color.b, 1 };
                 }
-                static auto rgba_to_native(const RGBAFloat &color) -> native_color_t {
-                    return native_color_t { { color.r, color.g, color.b, color.a } };
+
+                static constexpr auto rgba_to_native(const rgba &color) -> rgba_floats
+                {
+                    return{ color.r, color.g, color.b, color.a };
                 }
+
+                // Lifecycle
+
+                renderer();
 
                 void enter_context();
 
@@ -69,29 +80,29 @@ namespace gpc {
 
                 void define_viewport(int x, int y, int width, int height);
 
-                void clear(const native_color_t &color);
+                void clear(const rgba_floats &color);
 
-                auto register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t;
+                auto register_rgba_image(size_t width, size_t height, const rgba32 *pixels) -> image_handle;
 
-                void fill_rect(int x, int y, int w, int h, const native_color_t &color);
+                void fill_rect(int x, int y, int w, int h, const rgba_floats &color);
 
-                void draw_image(int x, int y, int w, int h, image_handle_t image);
+                void draw_image(int x, int y, int w, int h, image_handle image);
 
-                void draw_image(int x, int y, int w, int h, image_handle_t image, int offset_x, int offset_y);
+                void draw_image(int x, int y, int w, int h, image_handle image, int offset_x, int offset_y);
 
                 void set_clipping_rect(int x, int y, int w, int h);
 
                 void cancel_clipping();
 
-                auto register_font(const gpc::fonts::rasterized_font &rfont) -> reg_font_t;
+                auto register_font(const rasterized_font &font) -> font_handle;
 
-                void release_font(reg_font_t reg_font);
+                void release_font(font_handle reg_font);
 
-                void set_text_color(const native_color_t &color);
+                void set_text_color(const rgba_floats &color);
 
                 // auto get_text_extents(reg_font_t font, const char32_t *text, size_t count) -> text_bbox_t;
 
-                void render_text(reg_font_t font, int x, int y, const char32_t *text, size_t count);
+                void render_text(font_handle font, int x, int y, const char32_t *text, size_t count);
 
                 void init();
 
@@ -101,14 +112,14 @@ namespace gpc {
 
                 // TODO: move this back into non-template base class
 
-                static auto vertex_code() -> std::string {
+                static constexpr auto vertex_code() -> std::string {
 
                     return std::string {
                         #include "vertex.glsl.h"
                     };
                 }
 
-                static auto fragment_code() -> std::string {
+                static constexpr auto fragment_code() -> std::string {
 
                     return std::string {
                         #include "fragment.glsl.h"
@@ -116,12 +127,15 @@ namespace gpc {
                 }
 
                 struct managed_font: gpc::fonts::rasterized_font {
-                    managed_font(const gpc::fonts::rasterized_font &from): gpc::fonts::rasterized_font(from) {}
+                    
+                    managed_font(const rasterized_font &font_) : gpc::fonts::rasterized_font{ font_ } {}
+                    
+                    void store_pixels();
+                    void create_quads();
+
                     std::vector<GLuint> buffer_textures;
                     std::vector<GLuint> textures; // one 1D texture per variant
                     GLuint vertex_buffer;
-                    void storePixels();
-                    void createQuads();
                 };
 
                 //static const std::string vertex_code, fragment_code;
@@ -132,13 +146,13 @@ namespace gpc {
                 std::vector<GLuint> image_textures;
                 std::vector<managed_font> managed_fonts;
                 GLint vp_width, vp_height;
-                native_color_t text_color;
+                rgba_floats text_color;
             };
 
             // Method implementations -----------------------------------------
 
             template <bool YAxisDown>
-            Renderer<YAxisDown>::Renderer() :
+            renderer<YAxisDown>::renderer() :
                 vertex_buffer(0), index_buffer(0),
                 vertex_shader(0), fragment_shader(0), program(0)
             {
@@ -146,7 +160,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::init()
+            void renderer<YAxisDown>::init()
             {
                 // User code is responsible for creating and/or selecting the proper GL context when calling init()
                 // TODO: somehow (optionally) make use of glbinding's context management facilities?
@@ -189,7 +203,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::define_viewport(int x, int y, int w, int h)
+            void renderer<YAxisDown>::define_viewport(int /*x*/, int /*y*/, int w, int h)
             {
                 vp_width = w, vp_height = h;
                 //GL(Viewport, x, y, w, h);
@@ -200,7 +214,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::enter_context()
+            void renderer<YAxisDown>::enter_context()
             {
                 // TODO: does all this really belong here, or should there be a one-time init independent of viewport ?
                 GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -209,20 +223,20 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::leave_context()
+            void renderer<YAxisDown>::leave_context()
             {
                 GL(UseProgram, 0);
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::clear(const native_color_t &color)
+            void renderer<YAxisDown>::clear(const rgba_floats &color)
             {
                 GL(ClearColor, color.r(), color.g(), color.b(), color.a());
                 GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::draw_rect(int x, int y, int w, int h)
+            void renderer<YAxisDown>::draw_rect(int x, int y, int w, int h)
             {
                 // Prepare the vertices
                 GLint v[4][2];
@@ -244,7 +258,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            auto Renderer<YAxisDown>::register_rgba_image(size_t width, size_t height, const RGBA32 *pixels) -> image_handle_t
+            auto renderer<YAxisDown>::register_rgba_image(size_t width, size_t height, const rgba32 *pixels) -> image_handle
             {
                 auto i = image_textures.size();
                 image_textures.resize(i + 1);
@@ -256,7 +270,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const native_color_t &color)
+            void renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const rgba_floats &color)
             {
                 gpc::gl::setUniform("color", 2, color.components);
                 gpc::gl::setUniform("render_mode", 5, 1);
@@ -265,13 +279,13 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle_t image)
+            void renderer<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle image)
             {
                 draw_image(x, y, w, h, image, 0, 0);
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle_t image, int offset_x, int offset_y)
+            void renderer<YAxisDown>::draw_image(int x, int y, int w, int h, image_handle image, int offset_x, int offset_y)
             {
                 static const GLfloat black[4] = { 0, 0, 0, 0 };
 
@@ -291,49 +305,49 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::set_clipping_rect(int x, int y, int w, int h)
+            void renderer<YAxisDown>::set_clipping_rect(int x, int y, int w, int h)
             {
                 GL(Scissor, x, YAxisDown ? vp_height - (y + h) : y, w, h);
                 GL(Enable, GL_SCISSOR_TEST);
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::cancel_clipping()
+            void renderer<YAxisDown>::cancel_clipping()
             {
                 GL(Disable, GL_SCISSOR_TEST);
             }
 
             // TODO: free resources allocated for fonts
             template <bool YAxisDown>
-            auto Renderer<YAxisDown>::register_font(const gpc::fonts::rasterized_font &rfont) -> reg_font_t
+            auto renderer<YAxisDown>::register_font(const gpc::fonts::rasterized_font &font) -> font_handle
             {
                 // TODO: re-use discarded slots
-                reg_font_t index = managed_fonts.size();
+                font_handle index = managed_fonts.size();
 
-                managed_fonts.emplace_back(managed_font(rfont));
-                auto &mfont = managed_fonts.back();
+                managed_fonts.emplace_back(managed_font{ font });
+                auto &mf = managed_fonts.back();
 
-                mfont.storePixels();
-                mfont.createQuads();
+                mf.store_pixels();
+                mf.create_quads();
 
                 return index + 1;
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::release_font(reg_font_t handle)
+            void renderer<YAxisDown>::release_font(font_handle /*handle*/)
             {
-                auto &font = managed_fonts[handle - 1];
+                //auto &font = managed_fonts[handle - 1];
                 // TODO: actual implementation
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::set_text_color(const native_color_t &color)
+            void renderer<YAxisDown>::set_text_color(const rgba_floats &color)
             {
                 text_color = color;
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::render_text(reg_font_t handle, int x, int y, const char32_t *text, size_t count)
+            void renderer<YAxisDown>::render_text(font_handle handle, int x, int y, const char32_t *text, size_t count)
             {
                 using gpc::gl::setUniform;
 
@@ -385,7 +399,7 @@ namespace gpc {
             // managed_font private class -------------------------------------
 
             template <bool YAxisDown>
-            inline void Renderer<YAxisDown>::managed_font::createQuads()
+            inline void renderer<YAxisDown>::managed_font::create_quads()
             {
                 struct Vertex { GLint x, y; };
 
@@ -428,7 +442,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void Renderer<YAxisDown>::managed_font::storePixels()
+            void renderer<YAxisDown>::managed_font::store_pixels()
             {
                 buffer_textures.resize(variants.size());
                 GL(GenBuffers, buffer_textures.size(), &buffer_textures[0]);

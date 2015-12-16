@@ -44,7 +44,7 @@ foreach(shader ${SHADER_FILES})
 endforeach()
 
 #--------------------------------------
-# Libraries
+# Dependencies
 #
 
 target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGUIRenderer)
@@ -54,7 +54,9 @@ if (NOT TARGET libGPCGLWrappers)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGLWrappers)
 
-#find_package(libGPCGLUtils REQUIRED)
+if (NOT TARGET libGPCGLUtils)
+  find_package(libGPCGLUtils CONFIG REQUIRED)
+endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGLUtils)
 
 # All our calls to OpenGL are from within inlined code (header files),
@@ -71,32 +73,11 @@ endif()
 
 # GPC Fonts (we need the Rasterized Font module)
 
-find_package(libGPCFonts REQUIRED)
+if (NOT TARGET libGPCFonts)
+  find_package(libGPCFonts CONFIG REQUIRED)
+endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC libGPCFonts)
 
 # Cereal
 
 # Cereal does not have a package and must be made available by other means
-
-
-#------------------------------------------------
-# Config files
-
-# Create the config file
-
-# ... for the build tree
-set(CONF_CMAKE_DIR "${PROJECT_BINARY_DIR}")
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
-configure_file(${PROJECT_NAME}-config.cmake.in "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" @ONLY)
-
-# ... for the install tree
-message("INSTALL_CMAKE_DIR: ${INSTALL_CMAKE_DIR}")
-message("INSTALL_INCLUDE_DIR: ${INSTALL_INCLUDE_DIR}")
-file(RELATIVE_PATH rel_incdir "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}")
-set(CONF_INCLUDE_DIRS "\${${PROJECT_NAME}_CMAKE_DIR}/${rel_incdir}")
-configure_file(${PROJECT_NAME}-config.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}-config.cmake" @ONLY)
-
-# ... for both
-set(PACKAGE_VERSION ${})
-configure_file(${PROJECT_NAME}-config-version.cmake.in "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake" @ONLY)
-
