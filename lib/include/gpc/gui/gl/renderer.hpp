@@ -13,11 +13,11 @@
 #include <GL/glew.h>
 #endif
 
-#include <gpc/gui/renderer.hpp>
 #include <gpc/gl/wrappers.hpp>
 #include <gpc/gl/uniform.hpp>
 #include <gpc/gl/shader_program.hpp>
 #include <gpc/fonts/rasterized_font.hpp>
+#include <gpc/gui/renderer.hpp>
 
 namespace gpc {
 
@@ -26,6 +26,8 @@ namespace gpc {
         // TODO: is a dedicated namespace really necessary ?
 
         namespace gl {
+
+            using namespace ::gl;
 
             /** This templated class implements a yet to be defined compile-time interface (concept)
                 that would probably best be called something like "PixelGridFittingRenderer" and 
@@ -172,14 +174,14 @@ namespace gpc {
                 // Upload and compile our shader program
                 {
                     assert(vertex_shader == 0);
-                    vertex_shader = CALL_GL(glCreateShader, GL_VERTEX_SHADER);
+                    vertex_shader = GL(CreateShader, GL_VERTEX_SHADER);
                     // TODO: dispense with the error checking and logging in release builds
                     auto log = ::gpc::gl::compileShader(vertex_shader, vertex_code(), YAxisDown ? "#define Y_AXIS_DOWN" : "");
                     if (!log.empty()) std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
                     assert(fragment_shader == 0);
-                    fragment_shader = CALL_GL(glCreateShader, GL_FRAGMENT_SHADER);
+                    fragment_shader = GL(CreateShader, GL_FRAGMENT_SHADER);
                     // TODO: dispense with the error checking and logging in release builds
                     auto log = gpc::gl::compileShader(fragment_shader, fragment_code(), YAxisDown ? "#define Y_AXIS_DOWN" : "");
                     if (!log.empty()) std::cerr << "Fragment shader compilation log:" << std::endl << log << std::endl;
@@ -254,7 +256,7 @@ namespace gpc {
                 GL(DrawElements, GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, nullptr);
                 GL(DisableClientState, GL_VERTEX_ARRAY);
                 GL(BindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
-                EXEC_GL(glBindBuffer, GL_ARRAY_BUFFER, 0);
+                GL(BindBuffer, GL_ARRAY_BUFFER, 0);
             }
 
             template <bool YAxisDown>
