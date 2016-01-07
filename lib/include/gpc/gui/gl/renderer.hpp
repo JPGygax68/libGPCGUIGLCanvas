@@ -367,7 +367,7 @@ namespace gpc {
                 {
                     auto glyph_index = mfont.find_glyph(*text);
                     const auto &glyph = variant.glyphs[glyph_index];
-                    x -= glyph.cbox.bounds.x_min;
+                    x -= glyph.cbox.x_min;
                 }
 
                 setUniform("color", 2, text_color.components);
@@ -381,8 +381,8 @@ namespace gpc {
 
                     setUniform("glyph_base", 8, glyph.pixel_base);
                     GLint cbox[4] = { 
-                        glyph.cbox.bounds.x_min, glyph.cbox.bounds.x_max, 
-                        glyph.cbox.bounds.y_min, glyph.cbox.bounds.y_max };
+                        glyph.cbox.x_min, glyph.cbox.x_max, 
+                        glyph.cbox.y_min, glyph.cbox.y_max };
                     setUniform("glyph_cbox", 9, cbox);
                     GLint position[2] = { x, y };
                     setUniform("position", 4, position);
@@ -423,16 +423,16 @@ namespace gpc {
                     for (const auto &glyph : variant.glyphs) {
 
                         if (YAxisDown) {
-                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min, -glyph.cbox.bounds.y_max });
-                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min, -glyph.cbox.bounds.y_min });
-                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max, -glyph.cbox.bounds.y_min });
-                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max, -glyph.cbox.bounds.y_max });
+                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min, -glyph.cbox.y_max });
+                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min, -glyph.cbox.y_min });
+                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max, -glyph.cbox.y_min });
+                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max, -glyph.cbox.y_max });
                         }                                                               
                         else {                                                          
-                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min,  glyph.cbox.bounds.y_min });
-                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max,  glyph.cbox.bounds.y_min });
-                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max,  glyph.cbox.bounds.y_max });
-                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min,  glyph.cbox.bounds.y_max });
+                            /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min,  glyph.cbox.y_min });
+                            /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max,  glyph.cbox.y_min });
+                            /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.x_max,  glyph.cbox.y_max });
+                            /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.x_min,  glyph.cbox.y_max });
                         }
                     }
                 }
