@@ -1,8 +1,17 @@
 cmake_minimum_required(VERSION 3.0)
 
+#set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake ${CMAKE_MODULE_PATH})
+
 add_executable(TestApp main.cpp)
 
 target_link_libraries(TestApp PRIVATE libGPCGUIGLRenderer)
+
+# Test Image (from GPC GUI Renderer)
+
+if (NOT TARGET libGPCGUITestImage)
+    message(FATAL_ERROR "libGPCGUITestImage is not a target")
+endif()
+target_link_libraries(TestApp PRIVATE libGPCGUITestImage)
 
 # We need SDL2
 
@@ -45,6 +54,11 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(TestApp PRIVATE ${OPENGL_LIBRARIES})
 target_include_directories(TestApp PRIVATE ${OPENGL_INCLUDE_DIR})
 
+if (NOT TARGET glbinding)
+    message(FATAL_ERROR "glbinding not defined as a target")
+endif()
+target_link_libraries(TestApp PRIVATE glbinding)
+
 find_package(libGPCGLWrappers REQUIRED)
 target_link_libraries(TestApp PRIVATE libGPCGLWrappers)
 
@@ -53,7 +67,3 @@ target_link_libraries(TestApp PRIVATE libGPCGLWrappers)
 find_package(libGPCFonts REQUIRED)
 #target_include_directories(TestApp PRIVATE libGPCFonts)
 target_link_libraries(TestApp PRIVATE libGPCFonts)
-
-# GPC GUI Canvas Test Image module
-
-target_link_libraries(TestApp PRIVATE libGPCGUITestImage)

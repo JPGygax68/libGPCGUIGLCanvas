@@ -5,6 +5,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 //#include <SDL2/SDL_opengl.h>
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
+using namespace gl;
 #include <gpc/gl/wrappers.hpp>
 #include <gpc/gui/gl/renderer.hpp>
 
@@ -178,14 +181,14 @@ namespace {
 
 } // unnamed ns
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char * /*argv*/[])
 {
     try {
 
         SDL_Init(SDL_INIT_VIDEO);
         IMG_Init(IMG_INIT_PNG);
 
-        typedef gpc::gui::gl::Renderer<true> renderer_t;
+        typedef gpc::gui::gl::renderer<true> renderer_t;
         typedef gpc::gui::TestImageGenerator<renderer_t> generator_t;
 
         generator_t gen;
@@ -199,7 +202,8 @@ int main(int argc, char *argv[])
             int w = generator_t::WIDTH, h = generator_t::HEIGHT;
             window = SDL_CreateWindow("GPC GUI OpenGL Test Image Generator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
             gl_ctx = SDL_GL_CreateContext(window);
-            glewInit();
+            //glewInit();
+            glbinding::Binding::initialize();
             renderer.reset(new renderer_t());
             renderer->init();
             renderer->define_viewport(0, 0, w, h);

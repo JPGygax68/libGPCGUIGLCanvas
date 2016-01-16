@@ -4,3 +4,12 @@
 [submodule "thirdparty/libGPCGUIRenderer"]
 	path = thirdparty/libGPCGUIRenderer
 	url = https://github.com/JPGygax68/libGPCGUIRenderer.git
+[submodule "thirdparty/libGPCGLWrappers"]
+	path = thirdparty/libGPCGLWrappers
+	url = git@github.com:JPGygax68/libGPCGLWrappers.git
+[submodule "thirdparty/glbinding"]
+	path = thirdpary/glbinding
+	url = https://github.com/cginternals/glbinding.git
+[submodule "thirdparty/libGPCFonts"]
+	path = thirdparty/libGPCFonts
+	url = git@github.com:JPGygax68/libGPCFonts.git
