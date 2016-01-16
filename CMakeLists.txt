@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 # Project name
-project(libGPCGUIGLRenderer)
+project(libGPCGUIGLRenderer_Proj)
 
 # Version (semantic: major, minor, patch-level)
 set(VERSION_MAJOR 0)
