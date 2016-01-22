@@ -41,14 +41,6 @@ namespace gpc {
             class renderer {
             public:
 
-                struct rgba_floats {
-                    GLclampf components[4];
-                    GLclampf r() const { return components[0]; }
-                    GLclampf g() const { return components[1]; }
-                    GLclampf b() const { return components[2]; }
-                    GLclampf a() const { return components[3]; }
-                };
-
                 using rasterized_font = gpc::fonts::rasterized_font;
 
             public:
@@ -59,19 +51,24 @@ namespace gpc {
                 using length        = int;
                 using image_handle  = GLuint;
                 using font_handle   = GLint;
-                using native_color  = rgba_floats;
+                using native_color  = rgba;
 
                 // Class methods
 
-                static constexpr auto rgb_to_native(const rgb &color) -> rgba_floats
+                static constexpr auto rgba_to_native(const rgba &color) -> rgba
                 {
-                    return{ color.r, color.g, color.b, 1 };
+                    return color;
                 }
 
-                static constexpr auto rgba_to_native(const rgba &color) -> rgba_floats
+                /* static constexpr auto rgb_to_native(const rgb &color) -> rgba32
                 {
-                    return{ color.r, color.g, color.b, color.a };
+                    return{ 255 * color.r, 255 * color.g, 255 * color.b, 255 };
                 }
+
+                static constexpr auto rgba_to_native(const rgba &color) -> rgba32
+                {
+                    return{ 255 * color.r, 255 * color.g, 255 * color.b, 255 * color.a };
+                } */
 
                 // Lifecycle
 
@@ -83,11 +80,11 @@ namespace gpc {
 
                 void define_viewport(int x, int y, int width, int height);
 
-                void clear(const rgba_floats &color);
+                void clear(const rgba &color);
 
-                auto register_rgba_image(size_t width, size_t height, const rgba *pixels) -> image_handle;
+                auto register_rgba32_image(size_t width, size_t height, const rgba32 *pixels) -> image_handle;
 
-                void fill_rect(int x, int y, int w, int h, const rgba_floats &color);
+                void fill_rect(int x, int y, int w, int h, const rgba &color);
 
                 void draw_image(int x, int y, int w, int h, image_handle image);
 
@@ -101,7 +98,7 @@ namespace gpc {
 
                 void release_font(font_handle reg_font);
 
-                void set_text_color(const rgba_floats &color);
+                void set_text_color(const rgba &color);
 
                 // auto get_text_extents(reg_font_t font, const char32_t *text, size_t count) -> text_bbox_t;
 
@@ -149,7 +146,7 @@ namespace gpc {
                 std::vector<GLuint> image_textures;
                 std::vector<managed_font> managed_fonts;
                 GLint vp_width, vp_height;
-                rgba_floats text_color;
+                rgba text_color;
             };
 
             // Method implementations -----------------------------------------
@@ -176,15 +173,20 @@ namespace gpc {
                 {
                     assert(vertex_shader == 0);
                     vertex_shader = GL(CreateShader, GL_VERTEX_SHADER);
+                    auto code = vertex_code();
+                    if (YAxisDown) code = gpc::gl::insertLinesIntoShaderSource(code, "#define Y_AXIS_DOWN");
                     // TODO: dispense with the error checking and logging in release builds
-                    auto log = ::gpc::gl::compileShader(vertex_shader, vertex_code(), YAxisDown ? "#define Y_AXIS_DOWN" : "");
+                    auto log = ::gpc::gl::compileShader(vertex_shader, code);
                     if (!log.empty()) std::cerr << "Vertex shader compilation log:" << std::endl << log << std::endl;
                 }
                 {
                     assert(fragment_shader == 0);
                     fragment_shader = GL(CreateShader, GL_FRAGMENT_SHADER);
+                    auto code = fragment_code();
+                    if (YAxisDown) code = gpc::gl::insertLinesIntoShaderSource(code, "#define Y_AXIS_DOWN");
+                    //std::cerr << code << std::endl;
                     // TODO: dispense with the error checking and logging in release builds
-                    auto log = gpc::gl::compileShader(fragment_shader, fragment_code(), YAxisDown ? "#define Y_AXIS_DOWN" : "");
+                    auto log = gpc::gl::compileShader(fragment_shader, code);
                     if (!log.empty()) std::cerr << "Fragment shader compilation log:" << std::endl << log << std::endl;
                 }
                 assert(program == 0);
@@ -232,7 +234,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::clear(const rgba_floats &color)
+            void renderer<YAxisDown>::clear(const rgba &color)
             {
                 GL(ClearColor, color.r(), color.g(), color.b(), color.a());
                 GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -261,11 +263,12 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            auto renderer<YAxisDown>::register_rgba_image(size_t width, size_t height, const rgba *pixels) -> image_handle
+            auto renderer<YAxisDown>::register_rgba32_image(size_t width, size_t height, const rgba32 *pixels) -> image_handle
             {
                 auto i = image_textures.size();
                 image_textures.resize(i + 1);
                 GL(GenTextures, 1, &image_textures[i]);
+                //GL(ActiveTexture, GL_TEXTURE0);
                 GL(BindTexture, GL_TEXTURE_RECTANGLE, image_textures[i]);
                 GL(TexImage2D, GL_TEXTURE_RECTANGLE, 0, (GLint)GL_RGBA, width, height, 0, (GLenum)GL_RGBA, GL_UNSIGNED_BYTE, pixels);
                 GL(BindTexture, GL_TEXTURE_RECTANGLE, 0);
@@ -273,9 +276,9 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const rgba_floats &color)
+            void renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const rgba &color)
             {
-                gpc::gl::setUniform("color", 2, color.components);
+                GL(Uniform4fv, 2, 1, color);
                 gpc::gl::setUniform("render_mode", 5, 1);
 
                 draw_rect(x, y, w, h);
@@ -292,15 +295,15 @@ namespace gpc {
             {
                 static const GLfloat black[4] = { 0, 0, 0, 0 };
 
+                //GL(ActiveTexture, GL_TEXTURE0);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, image);
                 gpc::gl::setUniform("color", 2, black);
                 GLint position[2] = { x, y };
                 gpc::gl::setUniform("sampler", 3, 0);
                 gpc::gl::setUniform("position", 4, position);
                 GLint offset[2] = { offset_x, offset_y };
                 gpc::gl::setUniform("offset", 6, offset);
-                //GL(ActiveTexture, GL_TEXTURE0);
-                GL(BindTexture, GL_TEXTURE_RECTANGLE, image);
-                gpc::gl::setUniform("render_mode", 5, 2);
+                gpc::gl::setUniform("render_mode", 5, 2); // 2 = "paste image"
 
                 draw_rect(x, y, w, h);
 
@@ -344,7 +347,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::set_text_color(const rgba_floats &color)
+            void renderer<YAxisDown>::set_text_color(const rgba &color)
             {
                 text_color = color;
             }
@@ -371,7 +374,7 @@ namespace gpc {
                     x -= glyph.cbox.bounds.x_min;
                 }
 
-                setUniform("color", 2, text_color.components);
+                GL(Uniform4fv, 2, 1, text_color); // 2 = color
                 setUniform("render_mode", 5, 3);
                 setUniform("font_pixels", 7, 0); // use texture unit 0 to access glyph pixels
 

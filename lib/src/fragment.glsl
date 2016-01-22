@@ -39,7 +39,7 @@ void main() {
         int row = y_max - int(texel_position.y) - 1;
         #endif
 
-        float alpha = texelFetch(font_pixels, glyph_base + row * w + col);
+        float alpha = texelFetch(font_pixels, glyph_base + row * w + col).r;
 
         fragment_color = vec4(color.rgb, alpha * color.a);
     }
