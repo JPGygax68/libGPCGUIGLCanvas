@@ -50,16 +50,14 @@ endforeach()
 target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGUIRenderer)
 
 if (NOT TARGET libGPCGLWrappers)
-	find_package(libGPCGLWrappers REQUIRED)
+	message(FATAL_ERROR "libGPCGLWrappers not defined as a target")
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGLWrappers)
 
 if (NOT TARGET libGPCGLUtils)
-    find_package(libGPCGLUtils CONFIG REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGLUtils)
-else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGLUtils)
+    message(FATAL_ERROR "libGPCGLUtils not defined as a target")
 endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGLUtils)
 
 # All our calls to OpenGL are from within inlined code (header files),
 # so we don't link in any OpenGL bindings

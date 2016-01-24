@@ -51,11 +51,11 @@ namespace gpc {
                 using length        = int;
                 using image_handle  = GLuint;
                 using font_handle   = GLint;
-                using native_color  = rgba;
+                using native_color  = rgba_norm;
 
                 // Class methods
 
-                static constexpr auto rgba_to_native(const rgba &color) -> rgba
+                static constexpr auto rgba_to_native(const rgba_norm &color) -> rgba_norm
                 {
                     return color;
                 }
@@ -80,11 +80,11 @@ namespace gpc {
 
                 void define_viewport(int x, int y, int width, int height);
 
-                void clear(const rgba &color);
+                void clear(const rgba_norm &color);
 
                 auto register_rgba32_image(size_t width, size_t height, const rgba32 *pixels) -> image_handle;
 
-                void fill_rect(int x, int y, int w, int h, const rgba &color);
+                void fill_rect(int x, int y, int w, int h, const rgba_norm &color);
 
                 void draw_image(int x, int y, int w, int h, image_handle image);
 
@@ -98,7 +98,7 @@ namespace gpc {
 
                 void release_font(font_handle reg_font);
 
-                void set_text_color(const rgba &color);
+                void set_text_color(const rgba_norm &color);
 
                 // auto get_text_extents(reg_font_t font, const char32_t *text, size_t count) -> text_bbox_t;
 
@@ -146,7 +146,7 @@ namespace gpc {
                 std::vector<GLuint> image_textures;
                 std::vector<managed_font> managed_fonts;
                 GLint vp_width, vp_height;
-                rgba text_color;
+                rgba_norm text_color;
             };
 
             // Method implementations -----------------------------------------
@@ -234,7 +234,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::clear(const rgba &color)
+            void renderer<YAxisDown>::clear(const rgba_norm &color)
             {
                 GL(ClearColor, color.r(), color.g(), color.b(), color.a());
                 GL(Clear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -276,7 +276,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const rgba &color)
+            void renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const rgba_norm &color)
             {
                 GL(Uniform4fv, 2, 1, color);
                 gpc::gl::setUniform("render_mode", 5, 1);
@@ -347,7 +347,7 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::set_text_color(const rgba &color)
+            void renderer<YAxisDown>::set_text_color(const rgba_norm &color)
             {
                 text_color = color;
             }
