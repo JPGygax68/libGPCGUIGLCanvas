@@ -47,6 +47,9 @@ endforeach()
 # Dependencies
 #
 
+if (NOT TARGET libGPCGUIRenderer)
+	message(FATAL_ERROR "libGPCGUIRenderer not defined as a target")
+endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC libGPCGUIRenderer)
 
 if (NOT TARGET libGPCGLWrappers)

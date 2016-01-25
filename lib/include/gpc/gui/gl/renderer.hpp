@@ -60,16 +60,6 @@ namespace gpc {
                     return color;
                 }
 
-                /* static constexpr auto rgb_to_native(const rgb &color) -> rgba32
-                {
-                    return{ 255 * color.r, 255 * color.g, 255 * color.b, 255 };
-                }
-
-                static constexpr auto rgba_to_native(const rgba &color) -> rgba32
-                {
-                    return{ 255 * color.r, 255 * color.g, 255 * color.b, 255 * color.a };
-                } */
-
                 // Lifecycle
 
                 renderer();
