@@ -24,7 +24,7 @@ source_group("Shader files" FILES ${SHADER_FILES})
 
 # TODO: make this into a CMake module
 
-set(GENERATED "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(GENERATED "${CMAKE_BINARY_DIR}/generated")
 target_include_directories(${PROJECT_NAME} PUBLIC ${GENERATED})
 
 # Find the GPC Bin2C utility
@@ -34,7 +34,7 @@ find_package(GPCBin2C REQUIRED)
 
 foreach(shader ${SHADER_FILES})
   get_filename_component(name "${shader}" NAME)
-  set(shader_header "${GENERATED}/${name}.h")
+  set(shader_header "${GENERATED}/gpc/gui/gl/${name}.h")
   add_custom_command(
     OUTPUT ${shader_header}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${shader}

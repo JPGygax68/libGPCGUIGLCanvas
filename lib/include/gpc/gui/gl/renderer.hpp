@@ -105,14 +105,14 @@ namespace gpc {
                 static constexpr auto vertex_code() -> std::string {
 
                     return std::string {
-                        #include "vertex.glsl.h"
+                        #include "gpc/gui/gl/vertex.glsl.h"
                     };
                 }
 
                 static constexpr auto fragment_code() -> std::string {
 
                     return std::string {
-                        #include "fragment.glsl.h"
+                        #include "gpc/gui/gl/fragment.glsl.h"
                     };
                 }
 
@@ -184,6 +184,14 @@ namespace gpc {
                 GL(AttachShader, program, vertex_shader);
                 GL(AttachShader, program, fragment_shader);
                 GL(LinkProgram, program);
+                //GL(ValidateProgram, program);
+                char log[2048];
+                GLsizei len;
+                GL(GetProgramInfoLog, program, 2048, &len, log);
+                if (log[0] != '\0') {
+                    std::cerr << "Shader info log:" << std::endl << log << std::endl;
+                    throw std::runtime_error("gpc::gui::gl::renderer: failed to build shader program");
+                }
 
                 // Generate a vertex and an index buffer for rectangle vertices
                 assert(vertex_buffer == 0);
@@ -215,6 +223,7 @@ namespace gpc {
                 GL(BlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 GL(Enable, GL_BLEND);
                 GL(Disable, GL_DEPTH_TEST);
+                GL(UseProgram, program);
             }
 
             template <bool YAxisDown>
