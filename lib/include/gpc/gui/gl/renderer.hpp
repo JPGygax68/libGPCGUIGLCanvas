@@ -212,8 +212,8 @@ namespace gpc {
                 //GL(Viewport, x, y, w, h);
 
                 GL(UseProgram, program);
-                ::gpc::gl::setUniform("vp_width", 0, w);
-                ::gpc::gl::setUniform("vp_height", 1, h);
+                ::gpc::gl::setUniform("viewport_w", 0, w);
+                ::gpc::gl::setUniform("viewport_h", 1, h);
             }
 
             template <bool YAxisDown>
@@ -425,6 +425,7 @@ namespace gpc {
 
                     for (const auto &glyph : variant.glyphs) {
 
+#ifndef NOT_DEFINED
                         if (YAxisDown) {
                             /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min, -glyph.cbox.bounds.y_max });
                             /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min, -glyph.cbox.bounds.y_min });
@@ -437,6 +438,12 @@ namespace gpc {
                             /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max,  glyph.cbox.bounds.y_max });
                             /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min,  glyph.cbox.bounds.y_max });
                         }
+#else
+                        /* bottom left  */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min,  glyph.cbox.bounds.y_min });
+                        /* bottom right */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max,  glyph.cbox.bounds.y_min });
+                        /* top right    */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_max,  glyph.cbox.bounds.y_max });
+                        /* top left     */ vertices.emplace_back<Vertex>({ glyph.cbox.bounds.x_min,  glyph.cbox.bounds.y_max });
+#endif
                     }
                 }
 

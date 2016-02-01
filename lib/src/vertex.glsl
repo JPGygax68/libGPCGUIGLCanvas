@@ -1,36 +1,39 @@
 #version 430
 
 // Viewport width and height
-layout(location =  0) uniform int           vp_width;
-layout(location =  1) uniform int           vp_height;
+layout(location =  0) uniform int           viewport_w;
+layout(location =  1) uniform int           viewport_h;
 layout(location =  4) uniform ivec2         position;
 layout(location =  5) uniform int           render_mode;
 layout(location =  9) uniform ivec4         glyph_cbox;
 
-in  vec2 vertex_position;
-out vec2 texel_position;
+in  vec2 vp; // vertex position
+out vec2 tp; // texel position
 
 void main() {
 
-    if (render_mode == 1 || render_mode == 2) {
-
+    // Painting a colored or textured rectangle ?
+    if (render_mode == 1 || render_mode == 2)
+    {
         #ifdef Y_AXIS_DOWN
-        gl_Position = vec4(2 * vertex_position.x / float(vp_width) - 1, - (2 * vertex_position.y / float(vp_height) - 1), 0.0, 1.0);
+        gl_Position = vec4(2 * vp.x / float(viewport_w) - 1, - (2 * vp.y / float(viewport_h) - 1), 0.0, 1.0);
         #else
-        gl_Position = vec4(2 * vertex_position.x / float(vp_width) - 1, 2 * vertex_position.y / float(vp_height) - 1, 0.0, 1.0);
+        gl_Position = vec4(2 * vp.x / float(viewport_w) - 1,    2 * vp.y / float(viewport_h) - 1 , 0.0, 1.0);
         #endif
-        texel_position = vertex_position.xy - position;
+        tp = vp.xy - vec2(position);
     }
-    else if (render_mode == 3) {
-
-        ivec2 pixel_position = position + ivec2(vertex_position);
-
+    // Rendering text glyphs ?
+    else if (render_mode == 3)
+    {
         #ifdef Y_AXIS_DOWN
-        gl_Position = vec4(2 * pixel_position.x / float(vp_width) - 1, - (2 * pixel_position.y / float(vp_height) - 1), 0.0, 1.0);
+        vec2 pixel_position = position + ivec2(vp.x, - vp.y);
+        gl_Position = vec4(2 * float(position.x + vp.x) / float(viewport_w) - 1, - (2 * float(position.y + vp.y) / float(viewport_h) - 1), 0.0, 1.0);
+        //tp = vec2(vp.x, - vp.y);
         #else
-        gl_Position = vec4(2 * pixel_position.x / float(vp_width) - 1, 2 * pixel_position.y / float(vp_height) - 1, 0.0, 1.0);
+        ivec2 pixel_position = position + ivec2(vp);
+        gl_Position = vec4(2 * float(position.x + vp.x) / float(viewport_w) - 1,    2 * float(position.y + vp.y) / float(viewport_h) - 1 , 0.0, 1.0);
+        //tp = vp;
         #endif
-
-        texel_position = vertex_position;
+        tp = vp;
     }
 }
