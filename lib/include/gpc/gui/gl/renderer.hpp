@@ -377,8 +377,8 @@ namespace gpc {
                 setUniform("render_mode", 5, 3);
                 setUniform("font_pixels", 7, 0); // use texture unit 0 to access glyph pixels
 
-                for (const auto *p = text; p < (text + count); p++) {
-
+                for (const auto *p = text; p < (text + count); p++)
+                {
                     auto glyph_index = mfont.find_glyph(*p);
                     const auto &glyph = variant.glyphs[glyph_index];
 
