@@ -206,10 +206,10 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::define_viewport(int /*x*/, int /*y*/, int w, int h)
+            void renderer<YAxisDown>::define_viewport(int x, int y, int w, int h)
             {
                 vp_width = w, vp_height = h;
-                //GL(Viewport, x, y, w, h);
+                GL(Viewport, x, y, w, h);
 
                 GL(UseProgram, program);
                 ::gpc::gl::setUniform("viewport_w", 0, w);
