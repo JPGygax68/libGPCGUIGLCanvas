@@ -34,11 +34,20 @@ namespace gpc {
                 that would probably best be called something like "PixelGridFittingRenderer" and 
                 which is a specialization of "Renderer", both of which would belong to the gpc::gui
                 namespace.
+
+                TODO: inherit from base Renderer that defines default metadata (see below)
+                TODO: provide a concept checker ?
              */
             template <
                 bool YAxisDown
             >
             class renderer {
+            public:
+
+                // Metadata
+
+                static const bool font_handles_are_resources = true;
+
             public:
 
                 using rasterized_font = gpc::fonts::rasterized_font;
