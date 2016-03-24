@@ -101,7 +101,7 @@ namespace gpc {
 
                 // auto get_text_extents(reg_font_t font, const char32_t *text, size_t count) -> text_bbox_t;
 
-                void render_text(font_handle font, int x, int y, const char32_t *text, size_t count);
+                void render_text(font_handle font, int x, int y, const char32_t *text, size_t count, int w_max = 0);
 
                 void init();
 
@@ -361,8 +361,10 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
-            void renderer<YAxisDown>::render_text(font_handle handle, int x, int y, const char32_t *text, size_t count)
+            void renderer<YAxisDown>::render_text(font_handle handle, int x, int y, const char32_t *text, size_t count, int w_max)
             {
+                // TODO: support text that advances in Y direction (and right-to-left)
+
                 using gpc::gl::setUniform;
 
                 const auto &mfont = managed_fonts[handle - 1];
@@ -376,11 +378,11 @@ namespace gpc {
 
                 GL(BindTexture, GL_TEXTURE_BUFFER, mfont.textures[var_index]); // font pixels
 
-                {
-                    auto glyph_index = mfont.find_glyph(*text);
-                    const auto &glyph = variant.glyphs[glyph_index];
-                    x -= glyph.cbox.bounds.x_min;
-                }
+                int dx = 0;
+
+                auto glyph_index = mfont.find_glyph(*text);
+                auto glyph = & variant.glyphs[glyph_index];
+                dx -= glyph->cbox.bounds.x_min;
 
                 GL(Uniform4fv, 2, 1, text_color); // 2 = color
                 setUniform("render_mode", 5, 3);
@@ -388,21 +390,23 @@ namespace gpc {
 
                 for (const auto *p = text; p < (text + count); p++)
                 {
-                    auto glyph_index = mfont.find_glyph(*p);
-                    const auto &glyph = variant.glyphs[glyph_index];
+                    glyph_index = mfont.find_glyph(*p);
+                    glyph = & variant.glyphs[glyph_index];
 
-                    setUniform("glyph_base", 8, glyph.pixel_base);
+                    setUniform("glyph_base", 8, glyph->pixel_base);
                     GLint cbox[4] = { 
-                        glyph.cbox.bounds.x_min, glyph.cbox.bounds.x_max, 
-                        glyph.cbox.bounds.y_min, glyph.cbox.bounds.y_max };
+                        glyph->cbox.bounds.x_min, glyph->cbox.bounds.x_max, 
+                        glyph->cbox.bounds.y_min, glyph->cbox.bounds.y_max };
                     setUniform("glyph_cbox", 9, cbox);
-                    GLint position[2] = { x, y };
+                    GLint position[2] = { x + dx, y };
                     setUniform("position", 4, position);
 
                     GLint base = 4 * glyph_index;
                     GL(DrawArrays, GL_QUADS, base, 4);
 
-                    x += glyph.cbox.adv_x;
+                    dx += glyph->cbox.adv_x;
+
+                    if (w_max > 0 && dx >= w_max) break;
                 }
 
                 GL(BindTexture, GL_TEXTURE_BUFFER, 0);
