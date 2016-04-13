@@ -83,6 +83,8 @@ namespace gpc {
 
                 auto register_rgba32_image(size_t width, size_t height, const rgba32 *pixels) -> image_handle;
 
+                void release_rgba32_image(image_handle);
+
                 void fill_rect(int x, int y, int w, int h, const rgba_norm &color);
 
                 void draw_image(int x, int y, int w, int h, image_handle image);
@@ -104,6 +106,8 @@ namespace gpc {
                 void render_text(font_handle font, int x, int y, const char32_t *text, size_t count, int w_max = 0);
 
                 void init();
+
+                void cleanup();
 
                 void draw_rect(int x, int y, int width, int height);
 
@@ -215,6 +219,11 @@ namespace gpc {
             }
 
             template <bool YAxisDown>
+            void renderer<YAxisDown>::cleanup()
+            {
+            }
+
+            template <bool YAxisDown>
             void renderer<YAxisDown>::define_viewport(int x, int y, int w, int h)
             {
                 vp_width = w, vp_height = h;
@@ -281,6 +290,14 @@ namespace gpc {
                 GL(TexImage2D, GL_TEXTURE_RECTANGLE, 0, (GLint)GL_RGBA, width, height, 0, (GLenum)GL_RGBA, GL_UNSIGNED_BYTE, pixels);
                 GL(BindTexture, GL_TEXTURE_RECTANGLE, 0);
                 return image_textures[i];
+            }
+
+            template <bool YAxisDown>
+            void renderer<YAxisDown>::release_rgba32_image(image_handle hnd)
+            {
+                auto i = hnd - 1;
+                GL(DeleteTextures, 1, &image_textures[i]);
+                image_textures[i] = 0; // TODO: put into "recycle" list ?
             }
 
             template <bool YAxisDown>
