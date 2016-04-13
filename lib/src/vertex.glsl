@@ -4,6 +4,7 @@
 layout(location =  0) uniform int           viewport_w;
 layout(location =  1) uniform int           viewport_h;
 layout(location =  4) uniform ivec2         position;
+layout(location = 10) uniform mat2          texcoord_matrix = mat2(1.0);
 layout(location =  5) uniform int           render_mode;
 layout(location =  9) uniform ivec4         glyph_cbox;
 
@@ -35,6 +36,6 @@ void main() {
         #else
         gl_Position = vec4(2 * vp.x / float(viewport_w) - 1,    2 * vp.y / float(viewport_h) - 1 , 0.0, 1.0);
         #endif
-        tp = vp.xy - vec2(position);
+        tp = texcoord_matrix * (vp.xy - vec2(position));
     }
 }

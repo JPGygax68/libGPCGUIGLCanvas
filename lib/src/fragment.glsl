@@ -1,14 +1,17 @@
 #version 430
 
-layout(location = 0) uniform int            viewport_w;
-layout(location = 1) uniform int            viewport_h;
-layout(location = 2) uniform vec4           color;
-layout(location = 3) uniform sampler2DRect  sampler;
-layout(location = 5) uniform int            render_mode;
-layout(location = 6) uniform ivec2          offset;             // when rendering images: top-left corner inside image
-layout(location = 7) uniform samplerBuffer  font_pixels; 
-layout(location = 8) uniform int            glyph_base;
-layout(location = 9) uniform ivec4          glyph_cbox;
+// TODO: renumber uniforms
+
+layout(location =  0) uniform int               viewport_w;
+layout(location =  1) uniform int               viewport_h;
+layout(location =  2) uniform vec4              color;
+layout(location =  3) uniform sampler2DRect     sampler;
+layout(location =  5) uniform int               render_mode;
+layout(location =  6) uniform ivec2             offset;             // when rendering images: top-left corner inside image
+layout(location = 10) uniform mat2              texcoord_matrix = mat2(1.0);
+layout(location =  7) uniform samplerBuffer     font_pixels; 
+layout(location =  8) uniform int               glyph_base;
+layout(location =  9) uniform ivec4             glyph_cbox;
 
 in  vec2 tp;
 out vec4 fragment_color;

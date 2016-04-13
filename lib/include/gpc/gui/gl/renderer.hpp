@@ -108,6 +108,22 @@ namespace gpc {
                 void modulate_greyscale_image(int x, int y, int w, int h, image_handle, const rgba_norm &color, 
                     int offset_x = 0, int offset_y = 0);
 
+                /** Collection of image drawing methods intended for drawing an image in the
+                    4 cardinal directions.
+                */
+
+                void draw_greyscale_image_right_righthand(int x, int y, int length, int width, 
+                    image_handle, const rgba_norm &color,  int offset_x = 0, int offset_y = 0);
+
+                void draw_greyscale_image_down_righthand(int x, int y, int length, int width, 
+                    image_handle, const rgba_norm &color,  int offset_x = 0, int offset_y = 0);
+
+                void draw_greyscale_image_left_righthand(int x, int y, int length, int width, 
+                    image_handle, const rgba_norm &color,  int offset_x = 0, int offset_y = 0);
+
+                void draw_greyscale_image_up_righthand(int x, int y, int length, int width, 
+                    image_handle, const rgba_norm &color,  int offset_x = 0, int offset_y = 0);
+
                 void set_clipping_rect(int x, int y, int w, int h);
 
                 void cancel_clipping();
@@ -129,6 +145,9 @@ namespace gpc {
                 void draw_rect(int x, int y, int width, int height);
 
             private:
+
+                void _draw_greyscale_image(int x, int y, int w, int h, image_handle, const rgba_norm &color,
+                    int origin_x, int origin_y, float texrot_sin, float texrot_cos, int offset_x = 0, int offset_y = 0);
 
                 // TODO: move this back into non-template base class
 
@@ -378,17 +397,72 @@ namespace gpc {
             inline void renderer<YAxisDown>::modulate_greyscale_image(int x, int y, int w, int h, 
                 image_handle img, const rgba_norm &color, int offset_x, int offset_y)
             {
+                _draw_greyscale_image(x, y, w, h, img, color, 0, 0, 0, 1, offset_x, offset_y);
+            }
+
+            template<bool YAxisDown>
+            inline void renderer<YAxisDown>::draw_greyscale_image_right_righthand(int x, int y, int length, int width, 
+                image_handle img, const rgba_norm &color, int offset_x, int offset_y)
+            {
+                _draw_greyscale_image(x, y, length, width, img, color, 
+                    0, 0, // origin is on top left vertex
+                    0, 1, // don't rotate texture
+                    offset_x, offset_y
+                    );
+            }
+
+            template<bool YAxisDown>
+            inline void renderer<YAxisDown>::draw_greyscale_image_down_righthand(int x, int y, int length, int width, 
+                image_handle img, const rgba_norm &color, int offset_x, int offset_y)
+            {
+                _draw_greyscale_image(x - width, y, width, length, img, color, 
+                    length, 0, // origin is on top right vertex
+                    1, 0, // rotate texture 90° clockwise (sin theta = 1, cos theta = 0)
+                    offset_x, offset_y
+                    );
+            }
+
+            template<bool YAxisDown>
+            inline void renderer<YAxisDown>::draw_greyscale_image_left_righthand(int x, int y, int length, int width, 
+                image_handle img, const rgba_norm &color, int offset_x, int offset_y)
+            {
+                _draw_greyscale_image(x - length, y - width, length, width, img, color, 
+                    length, 1, // origin is on bottom right vertex
+                    0, -1, // rotate texture 180° clockwise (sin theta = 0, cos theta = -1)
+                    offset_x, offset_y
+                    );
+            }
+
+            template<bool YAxisDown>
+            inline void renderer<YAxisDown>::draw_greyscale_image_up_righthand(int x, int y, int length, int width, 
+                image_handle img, const rgba_norm &color, int offset_x, int offset_y)
+            {
+                _draw_greyscale_image(x, y - length, width, length, img, color, 
+                    0, length, // origin is on bottom left vertex
+                    -1, 0, // rotate texture 270° clockwise (sin theta = -1, cos theta = 0)
+                    offset_x, offset_y
+                    );
+            }
+
+            template<bool YAxisDown>
+            inline void renderer<YAxisDown>::_draw_greyscale_image(int x, int y, int w, int h, image_handle img, const rgba_norm &color, 
+                int origin_x, int origin_y, float texrot_sin, float texrot_cos, int offset_x, int offset_y)
+            {
+                using namespace gpc::gl;
+
                 auto native_clr = rgba_to_native(color);
 
                 //GL(ActiveTexture, GL_TEXTURE0);
                 GL(BindTexture, GL_TEXTURE_RECTANGLE, img);
-                gpc::gl::setUniform("color", 2, native_clr.components);
-                GLint position[2] = { x, y };
-                gpc::gl::setUniform("sampler", 3, 0);
-                gpc::gl::setUniform("position", 4, position);
+                setUniform("color", 2, native_clr.components);
+                GLint position[2] = { x + origin_x, y + origin_y };
+                setUniform("sampler", 3, 0);
+                setUniform("position", 4, position);
                 GLint offset[2] = { offset_x, offset_y };
-                gpc::gl::setUniform("offset", 6, offset);
-                gpc::gl::setUniform("render_mode", 5, 4); // 4 = "modulate greyscale image"
+                setUniform("offset", 6, offset);
+                GLfloat texcoord_matrix[2][2] = { texrot_cos, - texrot_sin, texrot_sin, texrot_cos };
+                setUniformMatrix2("texcoord_matrix", 10, &texcoord_matrix[0][0]);
+                setUniform("render_mode", 5, 4); // 4 = "modulate greyscale image"
 
                 draw_rect(x, y, w, h);
 
