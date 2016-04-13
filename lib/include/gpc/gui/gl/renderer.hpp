@@ -37,6 +37,7 @@ namespace gpc {
 
                 TODO: inherit from base Renderer that defines default metadata (see below)
                 TODO: provide a concept checker ?
+                TODO: change "rectangle" interfaces to use vertices only instead of vertices + extents ?
              */
             template <
                 bool YAxisDown
