@@ -62,10 +62,16 @@ namespace gpc {
                 using image_handle  = GLuint;
                 using font_handle   = GLint;
                 using native_color  = rgba_norm;
+                using native_mono   = mono_norm;
 
                 // Class methods
 
                 static constexpr auto rgba_to_native(const rgba_norm &color) -> rgba_norm
+                {
+                    return color;
+                }
+
+                static constexpr auto mono_to_native(const mono_norm &color) -> mono_norm
                 {
                     return color;
                 }
@@ -86,11 +92,21 @@ namespace gpc {
 
                 void release_rgba32_image(image_handle);
 
+                auto register_mono8_image(size_t width, size_t height, const mono8 *pixels) -> image_handle; 
+                    // TODO: use image handle type specific to mono images?
+
+                void release_mono8_image(image_handle);
+
                 void fill_rect(int x, int y, int w, int h, const rgba_norm &color);
 
+                // TODO: deprecate and rename to draw_color_image()
                 void draw_image(int x, int y, int w, int h, image_handle image);
 
+                // TODO: deprecate and rename to draw_color_image()
                 void draw_image(int x, int y, int w, int h, image_handle image, int offset_x, int offset_y);
+
+                void modulate_greyscale_image(int x, int y, int w, int h, image_handle, const rgba_norm &color, 
+                    int offset_x = 0, int offset_y = 0);
 
                 void set_clipping_rect(int x, int y, int w, int h);
 
@@ -301,6 +317,27 @@ namespace gpc {
                 image_textures[i] = 0; // TODO: put into "recycle" list ?
             }
 
+            template<bool YAxisDown>
+            inline auto renderer<YAxisDown>::register_mono8_image(size_t width, size_t height, const mono8 *pixels) -> image_handle
+            {
+                auto i = image_textures.size();
+                image_textures.resize(i + 1);
+                GL(GenTextures, 1, &image_textures[i]);
+                //GL(ActiveTexture, GL_TEXTURE0);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, image_textures[i]);
+                GL(TexImage2D, GL_TEXTURE_RECTANGLE, 0, (GLint)GL_ALPHA, width, height, 0, (GLenum)GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, 0);
+                return image_textures[i];
+            }
+
+            template<bool YAxisDown>
+            inline void renderer<YAxisDown>::release_mono8_image(image_handle)
+            {
+                auto i = hnd - 1;
+                GL(DeleteTextures, 1, &image_textures[i]);
+                image_textures[i] = 0; // TODO: put into "recycle" list ?
+            }
+
             template <bool YAxisDown>
             void renderer<YAxisDown>::fill_rect(int x, int y, int w, int h, const rgba_norm &color)
             {
@@ -330,6 +367,28 @@ namespace gpc {
                 GLint offset[2] = { offset_x, offset_y };
                 gpc::gl::setUniform("offset", 6, offset);
                 gpc::gl::setUniform("render_mode", 5, 2); // 2 = "paste image"
+
+                draw_rect(x, y, w, h);
+
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, 0);
+            }
+
+            // TODO: rename to "modulate_greyscale_image()" ?
+            template<bool YAxisDown>
+            inline void renderer<YAxisDown>::modulate_greyscale_image(int x, int y, int w, int h, 
+                image_handle img, const rgba_norm &color, int offset_x, int offset_y)
+            {
+                auto native_clr = rgba_to_native(color);
+
+                //GL(ActiveTexture, GL_TEXTURE0);
+                GL(BindTexture, GL_TEXTURE_RECTANGLE, img);
+                gpc::gl::setUniform("color", 2, native_clr.components);
+                GLint position[2] = { x, y };
+                gpc::gl::setUniform("sampler", 3, 0);
+                gpc::gl::setUniform("position", 4, position);
+                GLint offset[2] = { offset_x, offset_y };
+                gpc::gl::setUniform("offset", 6, offset);
+                gpc::gl::setUniform("render_mode", 5, 4); // 4 = "modulate greyscale image"
 
                 draw_rect(x, y, w, h);
 

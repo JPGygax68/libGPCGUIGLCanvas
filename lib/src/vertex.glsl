@@ -12,18 +12,8 @@ out vec2 tp; // texel position
 
 void main() {
 
-    // Painting a colored or textured rectangle ?
-    if (render_mode == 1 || render_mode == 2)
-    {
-        #ifdef Y_AXIS_DOWN
-        gl_Position = vec4(2 * vp.x / float(viewport_w) - 1, - (2 * vp.y / float(viewport_h) - 1), 0.0, 1.0);
-        #else
-        gl_Position = vec4(2 * vp.x / float(viewport_w) - 1,    2 * vp.y / float(viewport_h) - 1 , 0.0, 1.0);
-        #endif
-        tp = vp.xy - vec2(position);
-    }
     // Rendering text glyphs ?
-    else if (render_mode == 3)
+    if (render_mode == 3)
     {
         #ifdef Y_AXIS_DOWN
         vec2 pixel_position = position + ivec2(vp.x, - vp.y);
@@ -35,5 +25,16 @@ void main() {
         //tp = vp;
         #endif
         tp = vp;
+    }
+    // Painting color or image ?
+    //if (render_mode == 1 || render_mode == 2 || render_mode == 4)
+    else
+    {
+        #ifdef Y_AXIS_DOWN
+        gl_Position = vec4(2 * vp.x / float(viewport_w) - 1, - (2 * vp.y / float(viewport_h) - 1), 0.0, 1.0);
+        #else
+        gl_Position = vec4(2 * vp.x / float(viewport_w) - 1,    2 * vp.y / float(viewport_h) - 1 , 0.0, 1.0);
+        #endif
+        tp = vp.xy - vec2(position);
     }
 }

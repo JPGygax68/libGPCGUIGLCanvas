@@ -26,6 +26,13 @@ void main() {
         ivec2 tex_size = textureSize(sampler);
         fragment_color = texelFetch(sampler, (ivec2(tp) + offset) % tex_size);
     }
+    // Mono image modulating
+    // TODO: renumber rendering modes
+    else if (render_mode == 4) {
+
+        ivec2 tex_size = textureSize(sampler);
+        fragment_color = vec4(color.rgb, color.a * texelFetch(sampler, (ivec2(tp) + offset) % tex_size).a);
+    }
     // Glyph rendering
     else if (render_mode == 3) {
 
