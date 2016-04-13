@@ -23,7 +23,7 @@ void main() {
     // Image pasting
     else if (render_mode == 2) {
 
-        ivec2 tex_size = textureSize(sampler, 0);
+        ivec2 tex_size = textureSize(sampler);
         fragment_color = texelFetch(sampler, (ivec2(tp) + offset) % tex_size);
     }
     // Glyph rendering
