@@ -331,9 +331,10 @@ namespace gpc {
             template <bool YAxisDown>
             void renderer<YAxisDown>::release_rgba32_image(image_handle hnd)
             {
-                auto i = hnd - 1;
-                GL(DeleteTextures, 1, &image_textures[i]);
-                image_textures[i] = 0; // TODO: put into "recycle" list ?
+                auto i = std::find(std::begin(image_textures), std::end(image_textures), hnd);
+                assert(i != std::end(image_textures));
+                GL(DeleteTextures, 1, &hnd);
+                *i = 0; // TODO: put into "recycle" list ?
             }
 
             template<bool YAxisDown>
@@ -350,11 +351,9 @@ namespace gpc {
             }
 
             template<bool YAxisDown>
-            inline void renderer<YAxisDown>::release_mono8_image(image_handle)
+            inline void renderer<YAxisDown>::release_mono8_image(image_handle hnd)
             {
-                auto i = hnd - 1;
-                GL(DeleteTextures, 1, &image_textures[i]);
-                image_textures[i] = 0; // TODO: put into "recycle" list ?
+                release_rgba32_image(hnd); // same resource list
             }
 
             template <bool YAxisDown>
