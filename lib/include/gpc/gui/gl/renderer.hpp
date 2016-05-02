@@ -186,6 +186,10 @@ namespace gpc {
                 std::vector<managed_font> managed_fonts;
                 GLint vp_width, vp_height;
                 rgba_norm text_color;
+
+                #ifdef DEBUG
+                bool dbg_clipping_active = false;
+                #endif
             };
 
             // Method implementations -----------------------------------------
@@ -471,13 +475,26 @@ namespace gpc {
             template <bool YAxisDown>
             void renderer<YAxisDown>::set_clipping_rect(int x, int y, int w, int h)
             {
+                #ifdef DEBUG
+                assert(!dbg_clipping_active);
+                #endif
+
                 GL(Scissor, x, YAxisDown ? vp_height - (y + h) : y, w, h);
                 GL(Enable, GL_SCISSOR_TEST);
+
+                #ifdef DEBUG
+                dbg_clipping_active = true;
+                #endif
             }
 
             template <bool YAxisDown>
             void renderer<YAxisDown>::cancel_clipping()
             {
+                #ifdef DEBUG
+                assert(dbg_clipping_active);
+                dbg_clipping_active = false;
+                #endif
+
                 GL(Disable, GL_SCISSOR_TEST);
             }
 
