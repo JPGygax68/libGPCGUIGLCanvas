@@ -47,7 +47,10 @@ namespace gpc {
 
                 // Metadata
 
-                static const bool font_handles_are_resources = true;
+                static const bool font_mapping_is_expensive = true;
+                static const bool color_mapping_is_expensive = false;
+                //static const bool font_handles_are_resources = true;
+                //static const bool colors_are_resources       = false;
 
             public:
 
@@ -131,6 +134,7 @@ namespace gpc {
                 auto register_font(const rasterized_font &font) -> font_handle;
 
                 void release_font(font_handle reg_font);
+                //void release_font(const rasterized_font &);
 
                 void set_text_color(const rgba_norm &color);
 
@@ -261,6 +265,7 @@ namespace gpc {
             template <bool YAxisDown>
             void renderer<YAxisDown>::cleanup()
             {
+                // TODO: free all resources
             }
 
             template <bool YAxisDown>
@@ -517,7 +522,7 @@ namespace gpc {
             template <bool YAxisDown>
             void renderer<YAxisDown>::release_font(font_handle /*handle*/)
             {
-                //auto &font = managed_fonts[handle - 1];
+                // auto &font = managed_fonts[handle - 1];
                 // TODO: actual implementation
             }
 
